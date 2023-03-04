@@ -26,56 +26,58 @@ public class Run {
         commandMode = true;
         while(pos < bytes.size()){
             current = bytes.get(pos);
-            if(current == 1 && commandMode){
-                // PUSH
-                commandMode = false;
-                readPush();
-            }
-            else if(current == 2 && commandMode){
-                // DUP
-                commandMode = false;
-                readDup();
-            }
-            else if(current == 3 && commandMode){
-                // POP
-                commandMode = false;
-                readPop();
-            }
-            else if(current == 4 && commandMode){
-                // FRAME
-                commandMode = false;
-                readFrame();
-            }
-            else if(current == 5 && commandMode){
-                // FLIP
-                commandMode = false;
-                readFlip();
-            }
-            else if(current == 6 && commandMode){
-                // SWAP (swap end and pre-end)
-                commandMode = false;
-                readSwap();
-            }
-            else if(current == 7 && commandMode){
-                // OUT [constant]
-                commandMode = false;
-                readOut();
-            }
-            else if(current == 8 && commandMode){
-                // INP [constant]
-                commandMode = false;
-                readInp();
-            }
-            else if(current == 9 && commandMode){
-                // HALT
-                commandMode = false;
-                break;
-            }
-            else{
-                if(current == 0 && !commandMode){
-                    commandMode = true;
+            if(commandMode){
+                switch (current) {
+                    case 1 -> {
+                        // PUSH
+                        commandMode = false;
+                        readPush();
+                    }
+                    case 2 -> {
+                        // DUP
+                        commandMode = false;
+                        readDup();
+                    }
+                    case 3 -> {
+                        // POP
+                        commandMode = false;
+                        readPop();
+                    }
+                    case 4 -> {
+                        // FRAME
+                        commandMode = false;
+                        readFrame();
+                    }
+                    case 5 -> {
+                        // FLIP
+                        commandMode = false;
+                        readFlip();
+                    }
+                    case 6 -> {
+                        // SWAP (swap end and pre-end)
+                        commandMode = false;
+                        readSwap();
+                    }
+                    case 7 -> {
+                        // OUT [constant]
+                        commandMode = false;
+                        readOut();
+                    }
+                    case 8 -> {
+                        // INP [constant]
+                        commandMode = false;
+                        readInp();
+                    }
+                    case 9 ->
+                        // HALT
+                            commandMode = false;
+                    default -> {
+                        next();
+                    }
                 }
-                next();
+            }
+            if (!commandMode) {
+                commandMode = true;
             }
         }
     }
@@ -122,17 +124,17 @@ public class Run {
         stack.set(stack.size()-2, obj1);
     }
     private void readOut(){
-        // OUT [constant]
+        // OUT
         next();
         // IO operation
-        System.out.println(bytecode.getConstants().get(peek()).toString());
+        System.out.println(stack.get(stack.size()-1));
     }
     private void readInp(){
-        // INP  [constant]
+        // INP
         next();
         // IO operation
         Scanner in = new Scanner(System.in);
-        System.out.print(bytecode.getConstants().get(peek()).toString());
+        System.out.print(stack.get(stack.size()-1));
         String text = in.nextLine();
         stack.push(text);
     }
