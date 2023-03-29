@@ -32,4 +32,12 @@ public class ConstantAST implements AST {
     public void setLine(int line) {
         this.line = line;
     }
+
+    @Override
+    public String toString() {
+        return "ConstantAST{" +
+                "constant=" + constant +
+                ", line=" + line +
+                '}';
+    }
 }

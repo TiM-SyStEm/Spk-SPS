@@ -21,4 +21,14 @@ public class BinaryAST implements AST {
         expr2.compile(bytecode);
         bytecode.writeBinary(operation, line);
     }
+
+    @Override
+    public String toString() {
+        return "BinaryAST{" +
+                "expr1=" + expr1 +
+                ", expr2=" + expr2 +
+                ", operation=" + operation +
+                ", line=" + line +
+                '}';
+    }
 }

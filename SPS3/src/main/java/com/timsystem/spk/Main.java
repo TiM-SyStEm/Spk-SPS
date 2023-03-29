@@ -18,7 +18,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         Bytecode bc = new Bytecode();
-        Parser parser = new Parser(new Lexer("1 + 1 + 1"));
+        Parser parser = new Parser(new Lexer("var abc = 2 + 2 var abcd = abc + 1"));
         AST ast = parser.parse();
         ast.compile(bc);
         Disassemble.disassemble("AST test", bc);

@@ -6,6 +6,7 @@ import com.timsystem.spk.compiler.lib.TokenType;
 import com.timsystem.spk.vm.SPKException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Parser {
@@ -25,12 +26,21 @@ public class Parser {
         ArrayList<AST> block = new ArrayList<>();
         while (accumulator.current.getType() != TokenType.EOF) {
             block.add(root());
-            advance();
+            match(TokenType.SEMICOLON);
         }
         return new ProgramAST(block);
     }
 
     private AST root() {
+        return defining();
+    }
+
+    private AST defining() {
+        if (match(TokenType.VAR)) {
+            String name = consume(TokenType.WORD).getText();
+            consume(TokenType.EQ);
+            return new DefineVariableAST(term(), name, line());
+        }
         return term();
     }
 
@@ -76,6 +86,9 @@ public class Parser {
                 match(TokenType.RPAREN);
                 return expr;
             }
+            case WORD -> {
+                return new VariableAST(accumulator.previous.getText(), line());
+            }
             default -> {
                 throw new SPKException("ParseException", "bad expression", line());
             }
@@ -84,6 +97,14 @@ public class Parser {
 
     private int line() {
         return accumulator.current.getLine();
+    }
+
+    private Token consume(TokenType... types) {
+        if (match(types)) {
+            return accumulator.previous;
+        } else {
+            throw new SPKException("ParseException", "unexpected token '" + accumulator.current + "', expected '" + Arrays.toString(types), line());
+        }
     }
 
     private boolean match(TokenType... types) {
