@@ -38,6 +38,21 @@ public class Bytecode {
         return constants.size() - 1;
     }
 
+    public int writeRawConstant(Object constant, int line) {
+        int index = -1;
+        if (constants.contains(constant)) {
+            index = constants.indexOf(constant);
+        } else {
+            constants.add(constant);
+            index = constants.size() - 1;
+        }
+        byte[] intBytes = IntegerBytesConvert.int2ByteArr(index);
+        for (byte b : intBytes) {
+            writeInstruction(b, line);
+        }
+        return constants.size() - 1;
+    }
+
     public void writeBinary(char operation, int line) {
         writeInstruction(Instructions.OP_BINARY, line);
         writeInstruction((byte) operation, line);

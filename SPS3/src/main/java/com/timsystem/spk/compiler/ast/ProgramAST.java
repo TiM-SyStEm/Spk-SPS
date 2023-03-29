@@ -28,4 +28,11 @@ public class ProgramAST implements AST {
     public void setProgram(ArrayList<AST> program) {
         this.program = program;
     }
+
+    @Override
+    public String toString() {
+        return "ProgramAST{" +
+                "program=" + program +
+                '}';
+    }
 }

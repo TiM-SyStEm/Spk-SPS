@@ -22,4 +22,13 @@ public class UnaryAST implements AST {
             case '-' -> bytecode.writeInstruction(Instructions.OP_NEGATE, line);
         }
     }
+
+    @Override
+    public String toString() {
+        return "UnaryAST{" +
+                "expr=" + expr +
+                ", operation=" + operation +
+                ", line=" + line +
+                '}';
+    }
 }

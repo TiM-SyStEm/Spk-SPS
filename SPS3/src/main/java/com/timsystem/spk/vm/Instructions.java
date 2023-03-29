@@ -12,7 +12,8 @@ public class Instructions {
                         OP_INP = 8,
                         OP_HALT = 9,
                         OP_BINARY = 10,
-                        OP_SIGN = 11,
-                        OP_CHUNKS = 12,
-                        OP_CURCH = 13;
+                        OP_NEGATE = 11,
+                        OP_CREATE_VAR = 12, // variable creation
+                        OP_GET_VAR = 13; // retrieve variable value
+
 }

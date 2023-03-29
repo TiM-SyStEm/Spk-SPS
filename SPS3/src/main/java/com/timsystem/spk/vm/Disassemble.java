@@ -57,6 +57,26 @@ public class Disassemble {
                 case Instructions.OP_NEGATE -> {
                     immediateInstruction("OP_NEGATE");
                 }
+                case Instructions.OP_GET_VAR -> {
+                    byte[] indexBytes = new byte[] {
+                            bytes.get(i + 1),
+                            bytes.get(i + 2),
+                            bytes.get(i + 3),
+                            bytes.get(i + 4)
+                    };
+                    i += 4;
+                    constantInstruction("OP_GET_VAR", bytecode, IntegerBytesConvert.byteArr2Int(indexBytes));
+                }
+                case Instructions.OP_CREATE_VAR -> {
+                    byte[] indexBytes = new byte[] {
+                            bytes.get(i + 1),
+                            bytes.get(i + 2),
+                            bytes.get(i + 3),
+                            bytes.get(i + 4)
+                    };
+                    i += 4;
+                    constantInstruction("OP_CREATE_VAR", bytecode, IntegerBytesConvert.byteArr2Int(indexBytes));
+                }
                 default -> {
                     System.out.printf("NO SPECIFICATION FOR " + instruction + " OPCODE!\n");
                 }
