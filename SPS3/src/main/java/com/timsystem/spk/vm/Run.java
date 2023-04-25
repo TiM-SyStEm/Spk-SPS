@@ -1,5 +1,7 @@
 package com.timsystem.spk.vm;
 
+import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Stack;
@@ -8,7 +10,7 @@ public class Run {
     private Bytecode bytecode;
     private Stack<Object> stack;
     private byte current;
-    private boolean commandMode;
+    private boolean isWork;
     private int pos = 0;
     private ArrayList<Byte> bytes;
     private int chunkSize = 0;
@@ -26,59 +28,52 @@ public class Run {
         read();
     }
     public void read(){
-        commandMode = true;
+        isWork = true;
         while(pos < bytes.size()){
-            current = bytes.get(pos);
-            if(commandMode){
+            if(isWork){
+                current = bytes.get(pos);
+                System.out.print(pos);
+                System.out.println("\t" + current);
                 switch (current) {
                     case Instructions.OP_PUSH -> {
                         // PUSH
-                        commandMode = false;
                         readPush();
                     }
                     case Instructions.OP_DUP -> {
                         // DUP
-                        commandMode = false;
                         readDup();
                     }
                     case Instructions.OP_POP -> {
                         // POP
-                        commandMode = false;
                         readPop();
                     }
                     case Instructions.OP_FRAME -> {
                         // FRAME
-                        commandMode = false;
                         readFrame();
                     }
                     case Instructions.OP_FLIP -> {
                         // FLIP
-                        commandMode = false;
                         readFlip();
                     }
                     case Instructions.OP_SWAP -> {
                         // SWAP (swap end and pre-end)
-                        commandMode = false;
                         readSwap();
                     }
                     case Instructions.OP_OUT -> {
                         // OUT
-                        commandMode = false;
                         readOut();
                     }
                     case Instructions.OP_INP -> {
                         // INP
-                        commandMode = false;
                         readInp();
                     }
-                    case Instructions.OP_HALT ->
+                    case Instructions.OP_HALT -> {
                         // HALT
-                        commandMode = false;
+                        isWork = false;
+                    }
                     case Instructions.OP_SIGN ->
-                        // NEG
                         readSign();
                     case Instructions.OP_BINARY ->
-                        // NEG
                         readBinary();
                     case Instructions.OP_CHUNKS ->
                         // CHUNKS
@@ -87,22 +82,142 @@ public class Run {
                         // CURCH
                         // choose current chunk
                         readCurch();
+                    case Instructions.OP_CHUSZ->
+                        // CUSZ
+                        // choose chunk size
+                        readChusz();
+                    case Instructions.OP_JMP->
+                        // JMP
+                        // jump to label
+                        readJump();
+                    case Instructions.OP_JE->
+                        // JE
+                        // jump to label if end equal pre-end
+                        readJE();
+                    case Instructions.OP_JNE->
+                        // JNE
+                        // jump to label if end not equal pre-end
+                        readJNE();
+                    case Instructions.OP_JL->
+                        // JL
+                        // jump to label if end less than pre-end
+                        readJL();
+                    case Instructions.OP_JG->
+                        // JG
+                        // jump to label if end greater than pre-end
+                        readJG();
+                    case Instructions.OP_JLE->
+                        // JLE
+                        // jump to label if end greater than pre-end or equal
+                        readJLE();
+                    case Instructions.OP_JGE->
+                        // JGE
+                        // jump to label if end less than pre-end or equal
+                        readJGE();
+                    case Instructions.OP_JLN->
+                        // JLN
+                        // end less and not greater and not equal pre-end
+                        readJLN();
+                    case Instructions.OP_JGN->
+                        // JGN
+                        // end greater and not less and not equal pre-end
+                        readJGN();
+                    case Instructions.OP_JEV->
+                        // JEV
+                        // even number
+                        readJEV();
+                    case Instructions.OP_JUE->
+                        // JUE
+                        // uneven number
+                        readJUE();
                     default -> {
                         next();
                     }
                 }
             }
-            if (!commandMode) {
-                commandMode = true;
-            }
+            if(!isWork) break;
         }
     }
-
-    private void readCurch() {
+    private void readJump(){
+        // JMP [constant]
+        next();
+        pos = (int)retConstant(peek());
+    }
+    private void readJE(){
+        // JE [constant]
+        next();
+        if(stack.peek().equals(stack.get(stack.size()-2))){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJNE(){
+        // JNE [constant]
+        next();
+        if(!stack.peek().equals(stack.get(stack.size()-2))){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJL(){
+        // JL [constant]
+        next();
+        if((float)stack.peek() < (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJG(){
+        // JG [constant]
+        next();
+        if((float)stack.peek() > (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJLE(){
+        // JLE [constant]
+        next();
+        if((float)stack.peek() < (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJGE(){
+        // JGE [constant]
+        next();
+        if((float)stack.peek() > (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJLN(){
+        // JLN [constant]
+        next();
+        if((float)stack.peek() < (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJGN(){
+        // JLN [constant]
+        next();
+        if((float)stack.peek() > (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJEV(){
+        // JEV [constant]
+        next();
+        if((float)stack.peek()%2 == 0){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readJUE(){
+        // JUE [constant]
+        next();
+        if((float)stack.peek()%2 != 0){
+            pos = (int)retConstant(peek());
+        }
+    }
+    private void readCurch(){
         // CURCH [constant]
         next();
         if(chunks != null){
-            stack = chunks.get((int)bytecode.getConstants().get(peek()));
+            stack = chunks.get((int)retConstant(peek()));
         }
         else{
             throw new SPKException("NoChunks", "there are no chunks", line);
@@ -128,7 +243,10 @@ public class Run {
         }
         chunkSize = (int)stack.peek();
     }
-
+    private void readChusz(){
+        next();
+        chunkSize = (int)retConstant(peek());
+    }
     private void readBinary() {
         // BINARY [char]
         next();
@@ -202,7 +320,7 @@ public class Run {
 
     private void readSign() {
         // POSITIVE
-        // change the sigh of the last value of stack
+        // change the sign of the last value of stack
         next();
         stack.push(-(int)stack.peek());
     }
@@ -282,8 +400,18 @@ public class Run {
     private byte peek(int relative){
         return bytes.get(pos+relative);
     }
-    private Object retConstant(int i){
-        return bytecode.getConstants().get(i);
+    private Object retConstant(byte i){
+        byte[] indexBytes = new byte[] {
+                i,
+                peek(1),
+                peek(2),
+                peek(3)
+        };
+        int _int = IntegerBytesConvert.byteArr2Int(indexBytes);
+        next();
+        next();
+        next();
+        return bytecode.getConstants().get(_int);
     }
     private void next(){
         pos++;

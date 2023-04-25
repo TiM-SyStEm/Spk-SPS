@@ -14,6 +14,20 @@ public class Instructions {
                         OP_BINARY = 10,
                         OP_NEGATE = 11,
                         OP_CREATE_VAR = 12, // variable creation
-                        OP_GET_VAR = 13; // retrieve variable value
-
+                        OP_GET_VAR = 13, // retrieve variable value
+                        OP_SIGN = 14,
+                        OP_CHUNKS = 15,
+                        OP_CURCH = 16,
+                        OP_CHUSZ = 17,
+                        OP_JMP = 18,
+                        OP_JE = 19,
+                        OP_JNE = 20,
+                        OP_JL = 21,
+                        OP_JG = 22,
+                        OP_JLE = 23,
+                        OP_JGE = 24,
+                        OP_JLN = 25,
+                        OP_JGN = 26,
+                        OP_JEV = 27,
+                        OP_JUE = 28;
 }
