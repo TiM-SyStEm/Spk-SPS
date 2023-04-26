@@ -73,8 +73,12 @@ public class AssemblerCompiler {
         String[] parts = line.split(" ");
         int constantIndex = Integer.parseInt(parts[0]);
         Object expression = compileImmediateExpression(parts, 2, lineNumber);
+        int constantsSize = bytecode.getConstants().size();
+        if (constantsSize == 0) {
+            bytecode.getConstants().add(expression);
+            return;
+        }
         if (constantIndex > bytecode.getConstants().size()) {
-            int constantsSize = bytecode.getConstants().size();
             for (int i = 0; i < constantIndex - constantsSize; i++) {
                 bytecode.getConstants().add("If you are seeing this, then you have encountered a bug with .data section! [AssemblerCompiler.java line 81]");
             }
