@@ -77,12 +77,71 @@ public class Disassemble {
                     i += 4;
                     constantInstruction("OP_CREATE_VAR", bytecode, IntegerBytesConvert.byteArr2Int(indexBytes));
                 }
+                case Instructions.OP_JMP -> {
+                    jumpInstruction("OP_JMP", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JE -> {
+                    jumpInstruction("OP_JE", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JNE -> {
+                    jumpInstruction("OP_JNE", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JL -> {
+                    jumpInstruction("OP_JL", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JG -> {
+                    jumpInstruction("OP_JG", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JLE -> {
+                    jumpInstruction("OP_JLE", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JGE -> {
+                    jumpInstruction("OP_JGE", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JLN -> {
+                    jumpInstruction("OP_JLN", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JGN -> {
+                    jumpInstruction("OP_JGN", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JEV -> {
+                    jumpInstruction("OP_JEV", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_JUE -> {
+                    jumpInstruction("OP_JUE", bytecode.getBytecode(), i);
+                    i += 4;
+                }
+                case Instructions.OP_LOOP -> {
+                    jumpInstruction("OP_LOOP", bytecode.getBytecode(), i);
+                    i += 4;
+                }
                 default -> {
                     System.out.printf("NO SPECIFICATION FOR " + instruction + " OPCODE!\n");
                 }
             }
             previousLine = line;
         }
+    }
+
+    private static void jumpInstruction(String name, ArrayList<Byte> bytes, int i) {
+        byte[] indexBytes = new byte[] {
+                bytes.get(i + 1),
+                bytes.get(i + 2),
+                bytes.get(i + 3),
+                bytes.get(i + 4)
+        };
+        int jumpAddress = IntegerBytesConvert.byteArr2Int(indexBytes);
+        System.out.printf("%s %s\n", name, jumpAddress);
     }
 
     private static void characterInstruction(String name, Bytecode bytecode, int index) {
