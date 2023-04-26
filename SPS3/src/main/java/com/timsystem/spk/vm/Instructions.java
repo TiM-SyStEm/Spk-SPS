@@ -29,5 +29,6 @@ public class Instructions {
                         OP_JLN = 25,
                         OP_JGN = 26,
                         OP_JEV = 27,
-                        OP_JUE = 28;
+                        OP_JUE = 28,
+                        OP_LOOP = 29;
 }

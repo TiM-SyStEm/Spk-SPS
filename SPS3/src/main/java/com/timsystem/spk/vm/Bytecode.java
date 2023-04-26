@@ -23,17 +23,12 @@ public class Bytecode {
     }
 
     public int writeConstant(Object constant, int line) {
-        writeInstruction(Instructions.OP_PUSH, line);
         int index = -1;
         if (constants.contains(constant)) {
             index = constants.indexOf(constant);
         } else {
             constants.add(constant);
             index = constants.size() - 1;
-        }
-        byte[] intBytes = IntegerBytesConvert.int2ByteArr(index);
-        for (byte b : intBytes) {
-            writeInstruction(b, line);
         }
         return constants.size() - 1;
     }

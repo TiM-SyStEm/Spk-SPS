@@ -16,6 +16,8 @@ public class Run {
     private int chunkSize = 0;
     private int line;
     private ArrayList<Stack<Object>> chunks;
+    private int loopingCount = 0;
+    private int loopCounter = 0;
 
     public Run(Bytecode bytecode){
         this.bytecode = bytecode;
@@ -25,15 +27,18 @@ public class Run {
         bytes = bytecode.getBytecode();
         // initialize stack
         stack = new Stack<>();
+        for(byte b:bytes){
+            System.out.println(b);
+        }
+        System.out.println("============");
         read();
     }
     public void read(){
         isWork = true;
-        while(pos < bytes.size()){
-            if(isWork){
+        while(true){
+            if(!isWork) break;
+            else{
                 current = bytes.get(pos);
-                System.out.print(pos);
-                System.out.println("\t" + current);
                 switch (current) {
                     case Instructions.OP_PUSH -> {
                         // PUSH
@@ -130,18 +135,38 @@ public class Run {
                         // JUE
                         // uneven number
                         readJUE();
+                    case Instructions.OP_LOOP->
+                        // LOOP
+                        // from end of stack times and label
+                        readLOOP();
                     default -> {
                         next();
                     }
                 }
             }
-            if(!isWork) break;
+        }
+    }
+    private void readLOOP(){
+        // LOOP [constant]
+        next();
+
+        if(loopingCount == 0 && loopCounter == 0){
+            loopingCount = (int)stack.peek();
+        }
+        loopCounter++;
+        if(loopingCount > loopCounter){
+            pos = (int)retConstant(peek());
+        }
+        else if(loopingCount-1 == loopCounter){
+            loopingCount = 0;
+            loopCounter = 0;
         }
     }
     private void readJump(){
         // JMP [constant]
         next();
         pos = (int)retConstant(peek());
+        //System.out.println(pos);
     }
     private void readJE(){
         // JE [constant]
@@ -408,6 +433,7 @@ public class Run {
                 peek(3)
         };
         int _int = IntegerBytesConvert.byteArr2Int(indexBytes);
+        next();
         next();
         next();
         next();
