@@ -18,6 +18,8 @@ public class Run {
     private ArrayList<Stack<Object>> chunks;
     private int loopingCount = 0;
     private int loopCounter = 0;
+    private int saveAddress = -1;
+    private boolean procedureFlag;
 
     public Run(Bytecode bytecode){
         this.bytecode = bytecode;
@@ -27,10 +29,6 @@ public class Run {
         bytes = bytecode.getBytecode();
         // initialize stack
         stack = new Stack<>();
-        for(byte b:bytes){
-            System.out.println(b);
-        }
-        System.out.println("============");
         read();
     }
     public void read(){
@@ -139,11 +137,38 @@ public class Run {
                         // LOOP
                         // from end of stack times and label
                         readLOOP();
+                    case Instructions.OP_CALL->
+                        // CALL
+                        // from address
+                        readCALL();
+                    case Instructions.OP_RET->
+                        // RET
+                        // return from procedure
+                        readRET();
                     default -> {
                         next();
                     }
                 }
+                /*for(Object o : stack){
+                    System.out.println(o);
+                    System.out.println("===========");
+                }*/
             }
+        }
+    }
+    private void readCALL(){
+        next();
+        if(saveAddress != pos){
+            saveAddress = pos;
+            procedureFlag = true;
+            pos = peekIntOf4bites();
+        }
+        else saveAddress = -1;
+    }
+    private void readRET(){
+        if(procedureFlag){
+            pos = saveAddress;
+            procedureFlag = false;
         }
     }
     private void readLOOP(){
@@ -151,11 +176,11 @@ public class Run {
         next();
 
         if(loopingCount == 0 && loopCounter == 0){
-            loopingCount = (int)stack.peek();
+            loopingCount = ((Number)stack.peek()).intValue();
         }
         loopCounter++;
         if(loopingCount > loopCounter){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
         else if(loopingCount-1 == loopCounter){
             loopingCount = 0;
@@ -165,77 +190,77 @@ public class Run {
     private void readJump(){
         // JMP [constant]
         next();
-        pos = (int)retConstant(peek());
+        pos = peekIntOf4bites();
         //System.out.println(pos);
     }
     private void readJE(){
         // JE [constant]
         next();
         if(stack.peek().equals(stack.get(stack.size()-2))){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJNE(){
         // JNE [constant]
         next();
         if(!stack.peek().equals(stack.get(stack.size()-2))){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJL(){
         // JL [constant]
         next();
         if((float)stack.peek() < (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJG(){
         // JG [constant]
         next();
         if((float)stack.peek() > (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJLE(){
         // JLE [constant]
         next();
         if((float)stack.peek() < (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJGE(){
         // JGE [constant]
         next();
         if((float)stack.peek() > (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJLN(){
         // JLN [constant]
         next();
         if((float)stack.peek() < (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJGN(){
         // JLN [constant]
         next();
         if((float)stack.peek() > (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJEV(){
         // JEV [constant]
         next();
         if((float)stack.peek()%2 == 0){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readJUE(){
         // JUE [constant]
         next();
         if((float)stack.peek()%2 != 0){
-            pos = (int)retConstant(peek());
+            pos = peekIntOf4bites();
         }
     }
     private void readCurch(){
@@ -438,6 +463,20 @@ public class Run {
         next();
         next();
         return bytecode.getConstants().get(_int);
+    }
+    private int peekIntOf4bites(){
+        byte[] indexBytes = new byte[] {
+                peek(),
+                peek(1),
+                peek(2),
+                peek(3)
+        };
+        int _int = IntegerBytesConvert.byteArr2Int(indexBytes);
+        next();
+        next();
+        next();
+        next();
+        return _int;
     }
     private void next(){
         pos++;

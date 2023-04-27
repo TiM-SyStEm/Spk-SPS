@@ -1,5 +1,6 @@
 package com.timsystem.spk;
 
+import com.timsystem.spk.asm.AssemblerCompiler;
 import com.timsystem.spk.compiler.Lexer;
 import com.timsystem.spk.compiler.Parser;
 import com.timsystem.spk.compiler.ast.AST;
@@ -23,10 +24,21 @@ public class Main {
         AST ast = parser.parse();
         ast.compile(bc);
         Disassemble.disassemble("AST test", bc);*/
-        Bytecode bc = new Bytecode();
-
+        String SPAS_CODE = "#build sps\n" +
+                "label:\n" +
+                "PUSH 0\n" +
+                "OUT\n" +
+                "PUSH 1\n" +
+                "RET\n" +
+                "CALL label\n"+
+                "PUSH 1\n" +
+                "HALT\n" +
+                ".data:\n" +
+                "0 is \"Hello!\"\n" +
+                "1 is 5";
+        Bytecode bc = AssemblerCompiler.compile(SPAS_CODE);
         Run run = new Run(bc);
         run.run();
-        //Disassemble.disassemble("AST test", bc);
+        Disassemble.disassemble("AST test", bc);
     }
 }

@@ -30,5 +30,7 @@ public class Instructions {
                         OP_JGN = 26,
                         OP_JEV = 27,
                         OP_JUE = 28,
-                        OP_LOOP = 29;
+                        OP_LOOP = 29,
+                        OP_CALL = 30,
+                        OP_RET = 31;
 }

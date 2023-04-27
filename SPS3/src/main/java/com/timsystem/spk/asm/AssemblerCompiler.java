@@ -83,8 +83,10 @@ public class AssemblerCompiler {
                 bytecode.getConstants().add("If you are seeing this, then you have encountered a bug with .data section! [AssemblerCompiler.java line 81]");
             }
             bytecode.getConstants().add(constantIndex, expression);
-        } else {
+        } else if (constantIndex < bytecode.getConstants().size()) {
             bytecode.getConstants().set(constantIndex, expression);
+        } else {
+            bytecode.getConstants().add(expression);
         }
     }
 
@@ -205,6 +207,9 @@ public class AssemblerCompiler {
             case "jue" -> {
                 imitateJump(Instructions.OP_JUE, bytecode, parts, lineNumber);
             }
+            case "loop" -> {
+                imitateLoop(bytecode, parts, lineNumber);
+            }
         }
     }
 
@@ -219,7 +224,40 @@ public class AssemblerCompiler {
         }
         throw new SPKException("AssemblerErorr", "malformed inline expression", line);
     }
-
+    private static void imitateCall(Bytecode bytecode, String[] parts, int line){
+        String labelOrAddress = parts[1];
+        if (Character.isDigit(labelOrAddress.charAt(0))) {
+            // parse raw addressed jump
+            bytecode.writeInstruction(Instructions.OP_CALL, line);
+            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(Integer.parseInt(labelOrAddress));
+            for (byte b : addressBytes) {
+                bytecode.writeInstruction(b, line);
+            }
+        } else {
+            bytecode.writeInstruction(Instructions.OP_CALL, line);
+            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.get(labelOrAddress));
+            for (byte b : addressBytes) {
+                bytecode.writeInstruction(b, line);
+            }
+        }
+    }
+    private static void imitateLoop(Bytecode bytecode, String[] parts, int line){
+        String labelOrAddress = parts[1];
+        if (Character.isDigit(labelOrAddress.charAt(0))) {
+            // parse raw addressed jump
+            bytecode.writeInstruction(Instructions.OP_LOOP, line);
+            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(Integer.parseInt(labelOrAddress));
+            for (byte b : addressBytes) {
+                bytecode.writeInstruction(b, line);
+            }
+        } else {
+            bytecode.writeInstruction(Instructions.OP_LOOP, line);
+            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.get(labelOrAddress));
+            for (byte b : addressBytes) {
+                bytecode.writeInstruction(b, line);
+            }
+        }
+    }
     private static void imitateJump(byte jmpInstruction, Bytecode bytecode, String[] parts, int line) {
         String labelOrAddress = parts[1];
         if (Character.isDigit(labelOrAddress.charAt(0))) {
