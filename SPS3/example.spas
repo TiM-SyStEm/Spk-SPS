@@ -1,0 +1,9 @@
+#build sps
+jmp after_procedure
+proc example
+    push inline 12
+    out
+    ret
+
+after_procedure:
+call example
