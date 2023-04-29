@@ -153,7 +153,7 @@ public class Disassemble {
     }
     private static void constantInstruction(String name, Bytecode bytecode, int index) {
         Object constant = bytecode.getConstants().get(index);
-        System.out.printf("%s %s %s\n", name, constant.toString(), String.valueOf(index));
+        System.out.printf("%s %s %s %s\n", name, constant.toString(), constant.getClass().getSimpleName(), String.valueOf(index));
     }
 
 }
