@@ -34,7 +34,7 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
     implementation "org.joml:joml:${jomlVersion}"
 
-    implementation 'org.fusesource.jansi:jansi:1.8'
+    implementation 'org.fusesource.jansi:jansi:2.4.0'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
 }
