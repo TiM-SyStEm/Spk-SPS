@@ -2,6 +2,7 @@ package com.timsystem.spk.asm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
 import com.timsystem.spk.vm.Bytecode;
+import com.timsystem.spk.vm.Disassemble;
 import com.timsystem.spk.vm.Instructions;
 import com.timsystem.spk.vm.SPKException;
 
@@ -35,9 +36,10 @@ public class AssemblerCompiler {
     public static Bytecode compile(String assembler) {
         CompilationState state = new CompilationState(PARSE_SEGMENT_ASM, BUILD_UNDEFINED);
         Bytecode bytecode = new Bytecode();
-        // Two-pass SPK assembler compilation
+        // Three-pass SPK assembler compilation
         // First pass - compile .data section
-        // Second pass - compile all the assembler code
+        // Second pass - traverse all labels
+        // Third pass - compile all the assembler code
         int lineNumber = 1;
         boolean canCompileData = false;
         for (String line : assembler.split("\n")) {
@@ -55,11 +57,26 @@ public class AssemblerCompiler {
         lineNumber = 1;
         LABELS.clear();
         CONSTANTS_POINTER = 0;
+        Bytecode labelHolder = new Bytecode();
+
         for (String line : assembler.split("\n")) {
             line = line.trim();
+            if (line.replace(" ", "").equals(""))
+                continue;
             if (line.replace("\n", "").equals(".data:"))
                 break;
-            compileInstruction(bytecode, line, state, lineNumber);
+            compileInstruction(labelHolder, line, state, lineNumber, true);
+            lineNumber++;
+        }
+
+        lineNumber = 1;
+        for (String line : assembler.split("\n")) {
+            line = line.trim();
+            if (line.replace(" ", "").equals(""))
+                continue;
+            if (line.replace("\n", "").equals(".data:"))
+                break;
+            compileInstruction(bytecode, line, state, lineNumber, false);
             lineNumber++;
         }
 
@@ -90,7 +107,7 @@ public class AssemblerCompiler {
         }
     }
 
-    private static void compileInstruction(Bytecode bytecode, String instruction, CompilationState state, int lineNumber) {
+    private static void compileInstruction(Bytecode bytecode, String instruction, CompilationState state, int lineNumber, boolean compileLabels) {
         String[] parts = instruction.split(" ");
         if (parts[0].equals(".data")) {
             state.setSegmentState(PARSE_SEGMENT_DATA);
@@ -105,10 +122,11 @@ public class AssemblerCompiler {
             return;
         }
         // System.out.println(Arrays.toString(parts) + " " + parts[0].charAt(parts[0].length() - 1));
-        if (parts[0].charAt(parts[0].length() - 1) == ':') {
-            LABELS.put(parts[0].replace(":", ""), bytecode.getBytecode().size());
-            return;
-        }
+        if (compileLabels)
+            if (parts[0].charAt(parts[0].length() - 1) == ':') {
+                LABELS.put(parts[0].replace(":", ""), bytecode.getBytecode().size());
+                return;
+            }
 
         switch (parts[0].toLowerCase()) {
             case "push" -> {
@@ -182,37 +200,37 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_CHUSZ, lineNumber);
             }
             case "jmp" -> {
-                imitateJump(Instructions.OP_JMP, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JMP, bytecode, parts, lineNumber, compileLabels);
             }
             case "je" -> {
-                imitateJump(Instructions.OP_JE, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JE, bytecode, parts, lineNumber, compileLabels);
             }
             case "jne" -> {
-                imitateJump(Instructions.OP_JNE, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JNE, bytecode, parts, lineNumber, compileLabels);
             }
             case "jl" -> {
-                imitateJump(Instructions.OP_JL, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JL, bytecode, parts, lineNumber, compileLabels);
             }
             case "jg" -> {
-                imitateJump(Instructions.OP_JG, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JG, bytecode, parts, lineNumber, compileLabels);
             }
             case "jle" -> {
-                imitateJump(Instructions.OP_JLE, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JLE, bytecode, parts, lineNumber, compileLabels);
             }
             case "jge" -> {
-                imitateJump(Instructions.OP_JGE, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JGE, bytecode, parts, lineNumber, compileLabels);
             }
             case "jln" -> {
-                imitateJump(Instructions.OP_JLN, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JLN, bytecode, parts, lineNumber, compileLabels);
             }
             case "jgn" -> {
-                imitateJump(Instructions.OP_JGN, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JGN, bytecode, parts, lineNumber, compileLabels);
             }
             case "jev" -> {
-                imitateJump(Instructions.OP_JEV, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JEV, bytecode, parts, lineNumber, compileLabels);
             }
             case "jue" -> {
-                imitateJump(Instructions.OP_JUE, bytecode, parts, lineNumber);
+                imitateJump(Instructions.OP_JUE, bytecode, parts, lineNumber, compileLabels);
             }
             case "loop" -> {
                 imitateLoop(bytecode, parts, lineNumber);
@@ -233,10 +251,10 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_NOT, lineNumber);
             }
             case "jit" -> {
-                bytecode.writeInstruction(Instructions.OP_JIT, lineNumber);
+                imitateJump(Instructions.OP_JIT, bytecode, parts, lineNumber, compileLabels);
             }
             case "jif" -> {
-                bytecode.writeInstruction(Instructions.OP_JIF, lineNumber);
+                imitateJump(Instructions.OP_JIF, bytecode, parts, lineNumber, compileLabels);
             }
             case "frget" -> {
                 bytecode.writeInstruction(Instructions.OP_FRGET, lineNumber);
@@ -245,10 +263,10 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_CLR, lineNumber);
             }
             case "call" -> {
-
+                imitateJump(Instructions.OP_CALL, bytecode, parts, lineNumber, compileLabels);
             }
             case "proc" -> {
-                bytecode.writeInstruction(Instructions.OP_PROC, lineNumber);
+                LABELS.put(parts[1], bytecode.getBytecode().size());
             }
         }
     }
@@ -264,7 +282,8 @@ public class AssemblerCompiler {
         }
         throw new SPKException("AssemblerErorr", "malformed inline expression", line);
     }
-    private static void imitateCall(Bytecode bytecode, String[] parts, int line){
+
+    private static void imitateCall(Bytecode bytecode, String[] parts, int line) {
         String labelOrAddress = parts[1];
         if (Character.isDigit(labelOrAddress.charAt(0))) {
             // parse raw addressed jump
@@ -281,7 +300,8 @@ public class AssemblerCompiler {
             }
         }
     }
-    private static void imitateLoop(Bytecode bytecode, String[] parts, int line){
+
+    private static void imitateLoop(Bytecode bytecode, String[] parts, int line) {
         String labelOrAddress = parts[1];
         if (Character.isDigit(labelOrAddress.charAt(0))) {
             // parse raw addressed jump
@@ -298,8 +318,16 @@ public class AssemblerCompiler {
             }
         }
     }
-    private static void imitateJump(byte jmpInstruction, Bytecode bytecode, String[] parts, int line) {
+
+    private static void imitateJump(byte jmpInstruction, Bytecode bytecode, String[] parts, int line, boolean placehoder) {
         String labelOrAddress = parts[1];
+        if (placehoder) {
+            for (int i = 0; i < 5; i++) {
+                bytecode.writeInstruction((byte) 0, line);
+            }
+            return;
+        }
+
         if (Character.isDigit(labelOrAddress.charAt(0))) {
             // parse raw addressed jump
             bytecode.writeInstruction(jmpInstruction, line);
@@ -309,6 +337,7 @@ public class AssemblerCompiler {
             }
         } else {
             bytecode.writeInstruction(jmpInstruction, line);
+            // System.out.println(LABELS);
             byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.get(labelOrAddress));
             for (byte b : addressBytes) {
                 bytecode.writeInstruction(b, line);
