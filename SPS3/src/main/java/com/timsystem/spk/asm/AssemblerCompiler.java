@@ -161,6 +161,10 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_SWAP, lineNumber);
             }
             case "out" -> {
+                if (parts[1].equals("inline")) {
+                    bytecode.writeInstruction(Instructions.OP_PUSH, lineNumber);
+                    bytecode.writeRawConstant(compileImmediateExpression(parts, 2, lineNumber), lineNumber);
+                }
                 bytecode.writeInstruction(Instructions.OP_OUT, lineNumber);
             }
             case "inp" -> {
@@ -273,6 +277,9 @@ public class AssemblerCompiler {
 
     private static Object compileImmediateExpression(String[] parts, int parseShift, int line) {
         String firstWord = parts[parseShift + 0];
+        if (firstWord.equals("true") || firstWord.equals("false")) {
+            return firstWord.equals("true");
+        }
         try {
             return Double.parseDouble(firstWord);
         } catch (NumberFormatException ex) {
@@ -303,19 +310,24 @@ public class AssemblerCompiler {
 
     private static void imitateLoop(Bytecode bytecode, String[] parts, int line) {
         String labelOrAddress = parts[1];
-        if (Character.isDigit(labelOrAddress.charAt(0))) {
-            // parse raw addressed jump
+        if (parts.length > 2) {
+            compileInstruction(bytecode, "push inline " + parts[3], new CompilationState(PARSE_SEGMENT_ASM, BUILD_UNDEFINED), line, false);
             bytecode.writeInstruction(Instructions.OP_LOOP, line);
-            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(Integer.parseInt(labelOrAddress));
+            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.containsKey(labelOrAddress)
+                    ? LABELS.get(labelOrAddress)
+                    : Integer.parseInt(labelOrAddress));
             for (byte b : addressBytes) {
                 bytecode.writeInstruction(b, line);
             }
-        } else {
-            bytecode.writeInstruction(Instructions.OP_LOOP, line);
-            byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.get(labelOrAddress));
-            for (byte b : addressBytes) {
-                bytecode.writeInstruction(b, line);
-            }
+            return;
+        }
+
+        bytecode.writeInstruction(Instructions.OP_LOOP, line);
+        byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.containsKey(labelOrAddress)
+                                                                ? LABELS.get(labelOrAddress)
+                                                                : Integer.parseInt(labelOrAddress));
+        for (byte b : addressBytes) {
+            bytecode.writeInstruction(b, line);
         }
     }
 
