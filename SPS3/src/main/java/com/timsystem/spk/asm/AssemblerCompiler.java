@@ -171,9 +171,16 @@ public class AssemblerCompiler {
             case "sign" -> {
                 bytecode.writeInstruction(Instructions.OP_SIGN, lineNumber);
             }
-            case "chunks" -> throwMissingSpecification(parts, lineNumber);
-            case "curch" -> throwMissingSpecification(parts, lineNumber);
-            case "chusz" -> throwMissingSpecification(parts, lineNumber);
+            case "chunks" -> {
+                //throwMissingSpecification(parts, lineNumber);
+                bytecode.writeInstruction(Instructions.OP_CHUNKS, lineNumber);
+            }
+            case "curch" -> {
+                bytecode.writeInstruction(Instructions.OP_CURCH, lineNumber);
+            }
+            case "chusz" -> {
+                bytecode.writeInstruction(Instructions.OP_CHUSZ, lineNumber);
+            }
             case "jmp" -> {
                 imitateJump(Instructions.OP_JMP, bytecode, parts, lineNumber);
             }
@@ -209,6 +216,39 @@ public class AssemblerCompiler {
             }
             case "loop" -> {
                 imitateLoop(bytecode, parts, lineNumber);
+            }
+            case "ret" -> {
+                bytecode.writeInstruction(Instructions.OP_RET, lineNumber);
+            }
+            case "and" -> {
+                bytecode.writeInstruction(Instructions.OP_AND, lineNumber);
+            }
+            case "or" -> {
+                bytecode.writeInstruction(Instructions.OP_OR, lineNumber);
+            }
+            case "xor" -> {
+                bytecode.writeInstruction(Instructions.OP_XOR, lineNumber);
+            }
+            case "not" -> {
+                bytecode.writeInstruction(Instructions.OP_NOT, lineNumber);
+            }
+            case "jit" -> {
+                bytecode.writeInstruction(Instructions.OP_JIT, lineNumber);
+            }
+            case "jif" -> {
+                bytecode.writeInstruction(Instructions.OP_JIF, lineNumber);
+            }
+            case "frget" -> {
+                bytecode.writeInstruction(Instructions.OP_FRGET, lineNumber);
+            }
+            case "clr" -> {
+                bytecode.writeInstruction(Instructions.OP_CLR, lineNumber);
+            }
+            case "call" -> {
+
+            }
+            case "proc" -> {
+                bytecode.writeInstruction(Instructions.OP_PROC, lineNumber);
             }
         }
     }

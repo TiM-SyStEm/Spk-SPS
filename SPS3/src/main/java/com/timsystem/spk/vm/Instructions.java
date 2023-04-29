@@ -32,5 +32,14 @@ public class Instructions {
                         OP_JUE = 28,
                         OP_LOOP = 29,
                         OP_CALL = 30,
-                        OP_RET = 31;
+                        OP_RET = 31,
+                        OP_AND = 32,
+                        OP_OR = 33,
+                        OP_XOR = 34,
+                        OP_NOT = 35,
+                        OP_JIT = 36,
+                        OP_JIF = 37,
+                        OP_FRGET = 38,
+                        OP_CLR = 39,
+                        OP_PROC = 40;
 }
