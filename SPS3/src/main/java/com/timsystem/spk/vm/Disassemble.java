@@ -149,8 +149,15 @@ public class Disassemble {
                 case Instructions.OP_CLR -> {
                     immediateInstruction("OP_CLR");
                 }
-                case Instructions.OP_PROC -> {
-                    // why?
+                case Instructions.OP_CALL_NATIVE -> {
+                    byte[] indexBytes = new byte[]{
+                            bytes.get(i + 1),
+                            bytes.get(i + 2),
+                            bytes.get(i + 3),
+                            bytes.get(i + 4)
+                    };
+                    i += 4;
+                    constantInstruction("OP_CALL_NATIVE", bytecode, IntegerBytesConvert.byteArr2Int(indexBytes));
                 }
                 default -> {
                     System.out.printf("NO SPECIFICATION FOR " + instruction + " OPCODE!\n");

@@ -148,6 +148,25 @@ public class AssemblerCompiler {
                     }
                 }
             }
+            case "call_native" -> {
+                String inlineIndicator = parts[1].toLowerCase();
+                if (inlineIndicator.equals("inline")) {
+                    Object expression = compileImmediateExpression(parts, 2, lineNumber); // to skip 'PUSH inline' parts
+                    bytecode.getConstants().add(expression);
+                    bytecode.writeInstruction(Instructions.OP_CALL_NATIVE, lineNumber);
+                    byte[] indexBytes = IntegerBytesConvert.int2ByteArr(bytecode.getConstants().size() - 1);
+                    for (byte b : indexBytes) {
+                        bytecode.writeInstruction(b, lineNumber);
+                    }
+                } else {
+                    int index = Integer.parseInt(parts[1]);
+                    bytecode.writeInstruction(Instructions.OP_CALL_NATIVE, lineNumber);
+                    byte[] indexBytes = IntegerBytesConvert.int2ByteArr(index);
+                    for (byte b : indexBytes) {
+                        bytecode.writeInstruction(b, lineNumber);
+                    }
+                }
+            }
             case "dup" -> {
                 bytecode.writeInstruction(Instructions.OP_DUP, lineNumber);
             }
@@ -161,9 +180,11 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_SWAP, lineNumber);
             }
             case "out" -> {
-                if (parts[1].equals("inline")) {
-                    bytecode.writeInstruction(Instructions.OP_PUSH, lineNumber);
-                    bytecode.writeRawConstant(compileImmediateExpression(parts, 2, lineNumber), lineNumber);
+                if (parts.length != 1) {
+                    if (parts[1].equals("inline")) {
+                        bytecode.writeInstruction(Instructions.OP_PUSH, lineNumber);
+                        bytecode.writeRawConstant(compileImmediateExpression(parts, 2, lineNumber), lineNumber);
+                    }
                 }
                 bytecode.writeInstruction(Instructions.OP_OUT, lineNumber);
             }
@@ -324,8 +345,8 @@ public class AssemblerCompiler {
 
         bytecode.writeInstruction(Instructions.OP_LOOP, line);
         byte[] addressBytes = IntegerBytesConvert.int2ByteArr(LABELS.containsKey(labelOrAddress)
-                                                                ? LABELS.get(labelOrAddress)
-                                                                : Integer.parseInt(labelOrAddress));
+                ? LABELS.get(labelOrAddress)
+                : Integer.parseInt(labelOrAddress));
         for (byte b : addressBytes) {
             bytecode.writeInstruction(b, line);
         }

@@ -1,6 +1,14 @@
 package com.timsystem.spk;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+
+import com.timsystem.spk.asm.AssemblerCompiler;
+import com.timsystem.spk.asm.RawBytecode;
+import com.timsystem.spk.vm.Bytecode;
+import com.timsystem.spk.vm.Disassemble;
+import com.timsystem.spk.vm.Run;
 import org.fusesource.jansi.AnsiConsole;
 import java.util.Objects;
 import java.util.Scanner;
@@ -15,17 +23,7 @@ public class Main {
         Parser parser = new Parser(new Lexer("var abc = 2 + 2 var abcd = abc + 1"));
         AST ast = parser.parse();
         ast.compile(bc);
-        Disassemble.disassemble("AST test", bc);
-        String SPAS_CODE = "#build sps\n" +
-                "PUSH 0\n" +
-                "OUT\n" +
-                "HALT\n" +
-                ".data:\n" +
-                "0 is \"Hello!\"\n";
-        Bytecode bc = AssemblerCompiler.compile(SPAS_CODE);
-        Run run = new Run(bc);
-        run.run();
-        Disassemble.disassemble("AST test", bc);*/
+        */
         AnsiConsole.systemInstall();
         CommandLine cmd = new CommandLine();
         cmd.execute();
@@ -44,7 +42,7 @@ public class Main {
             System.out.println("Special Key " + getVer() + "\n");
         }
         private void looping(){
-            System.out.println(RESET);
+            System.out.print(RESET);
             command = "";
             arg = "";
             flags = new ArrayList<>();
@@ -68,7 +66,7 @@ public class Main {
                 }
                 else if(buildStr){
                     if(part.charAt(part.length()-1) != '"'){
-                        buffer.append(part);
+                        buffer.append(part + " ");
                     }
                     else{
                         buffer.append(part.replace("\"", ""));
@@ -83,13 +81,57 @@ public class Main {
             // COMMAND CHECK
             switch (command){
                 case "build" -> {
+                    if(flags.contains("asm")){
 
+                    }
+                    else{
+
+                    }
+                }
+                case "run" -> {
+                    if(arg.charAt(arg.length()-1) == 'k' &&
+                            arg.charAt(arg.length()-2) == 'p' &&
+                            arg.charAt(arg.length()-3) == 's' &&
+                            arg.charAt(arg.length()-4) == '.'){
+
+                    }
+                    else{
+
+                    }
+                }
+                case "spas" -> {
+                    if(flags.contains("comp")){
+                        try{
+                            Bytecode bytecode = AssemblerCompiler.compileFile(arg);
+                            RawBytecode.saveToFile(bytecode, SPASfile2SPKVM(arg));
+                        } catch (Exception ex){
+                            ex.printStackTrace();
+                        }
+                    }
+                    else if(flags.contains("disasm")){
+                        Bytecode bytecode = RawBytecode.readFromFile(arg);
+                        Disassemble.disassemble("Disasm SPKVM bytecode:", bytecode);
+                    }
+                }
+                case "spkvm" -> {
+                    Bytecode bytecode = RawBytecode.readFromFile(arg);
+                    Run run = new Run(bytecode);
+                    run.run();
                 }
                 default -> {
                     System.out.print("\\u001B[31m");
                     System.out.println("Command not found!");
                 }
             }
+        }
+        private String SPASfile2SPKVM(String spas){
+            StringBuilder spkvm = new StringBuilder(spas);
+            spkvm.setCharAt(spas.length()-1, 'v');
+            spkvm.setCharAt(spas.length()-2, 'k');
+            spkvm.setCharAt(spas.length()-3, 'p');
+            spkvm.setCharAt(spas.length()-4, 's');
+            spkvm.append("m");
+            return spkvm.toString();
         }
         private boolean isNumeric(char ch) {
             String str = Character.toString(ch);

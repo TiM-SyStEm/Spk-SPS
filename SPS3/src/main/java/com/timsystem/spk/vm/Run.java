@@ -1,6 +1,9 @@
 package com.timsystem.spk.vm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
+import com.timsystem.spk.vm.lib.JavaTuple;
+import com.timsystem.spk.vm.runtime.Natives;
+import com.timsystem.spk.vm.runtime.SPKVMCore;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -8,7 +11,7 @@ import java.util.Stack;
 
 public class Run {
     private Bytecode bytecode;
-    private Stack<Object> stack;
+    public static Stack<Object> stack;
     private byte current;
     private boolean isWork;
     private int pos = 0;
@@ -18,6 +21,8 @@ public class Run {
     private ArrayList<Stack<Object>> chunks;
     private int loopingCount = 0;
     private int loopCounter = 0;
+    private Stack<Integer> callsStack = new Stack<>();
+    private boolean procRead;
 
     public Run(Bytecode bytecode){
         this.bytecode = bytecode;
@@ -27,6 +32,8 @@ public class Run {
         bytes = bytecode.getBytecode();
         // initialize stack
         stack = new Stack<>();
+        // initialize SPKVMCore functions
+        new SPKVMCore();
         read();
     }
     public void read(){
@@ -35,6 +42,7 @@ public class Run {
             if(!isWork) break;
             else{
                 current = bytes.get(pos);
+
                 switch (current) {
                     case Instructions.OP_PUSH -> {
                         // PUSH
@@ -171,6 +179,10 @@ public class Run {
                         // CLR
                         // clear stack
                         readCLR();
+                    case Instructions.OP_CALL_NATIVE->
+                        // CALL_NATIVE
+                        // call the native function from Java
+                        readCALLNATIVE();
                     default -> {
                         next();
                     }
@@ -182,12 +194,18 @@ public class Run {
             }
         }
     }
+    private void readCALLNATIVE(){
+        next();
+        String name = (String)retConstant(peek());
+        Natives.Run(name);
+    }
     private void readJIT(){
         // JIT [addr]
         next();
         if((boolean) stack.peek()){
             pos = peekIntOf4bites();
         }
+        stack.pop();
     }
     private void readJIF(){
         // JIF [addr]
@@ -195,28 +213,38 @@ public class Run {
         if(!((boolean) stack.peek())){
             pos = peekIntOf4bites();
         }
+        stack.pop();
     }
     private void readAND(){
         boolean res = (boolean)stack.peek() && (boolean)stack.get(stack.size()-2);
+        stack.pop();
+        stack.pop();
         stack.push(res);
     }
     private void readOR(){
         boolean res = (boolean)stack.peek() || (boolean)stack.get(stack.size()-2);
+        stack.pop();
+        stack.pop();
         stack.push(res);
     }
     private void readNOT(){
         boolean res = !(boolean)stack.peek();
+        stack.pop();
         stack.push(res);
     }
     private void readXOR(){
         boolean res = (boolean)stack.peek() ^ (boolean)stack.get(stack.size()-2);
+        stack.pop();
+        stack.pop();
         stack.push(res);
     }
     private void readCALL(){
-
+        next();
+        callsStack.push(pos);
+        pos = peekIntOf4bites();
     }
     private void readRET(){
-
+        pos = callsStack.pop();
     }
     private void readLOOP(){
         // LOOP [constant]
@@ -224,6 +252,7 @@ public class Run {
 
         if(loopingCount == 0 && loopCounter == 0){
             loopingCount = ((Number)stack.peek()).intValue();
+            stack.pop();
         }
         loopCounter++;
         if(loopingCount > loopCounter){
@@ -246,6 +275,8 @@ public class Run {
         if(stack.peek().equals(stack.get(stack.size()-2))){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJNE(){
         // JNE [addr]
@@ -253,6 +284,8 @@ public class Run {
         if(!stack.peek().equals(stack.get(stack.size()-2))){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJL(){
         // JL [addr]
@@ -260,6 +293,8 @@ public class Run {
         if((float)stack.peek() < (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJG(){
         // JG [addr]
@@ -267,6 +302,8 @@ public class Run {
         if((float)stack.peek() > (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJLE(){
         // JLE [addr]
@@ -274,6 +311,8 @@ public class Run {
         if((float)stack.peek() < (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJGE(){
         // JGE [addr]
@@ -281,6 +320,8 @@ public class Run {
         if((float)stack.peek() > (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJLN(){
         // JLN [addr]
@@ -288,6 +329,8 @@ public class Run {
         if((float)stack.peek() < (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJGN(){
         // JLN [addr]
@@ -295,6 +338,8 @@ public class Run {
         if((float)stack.peek() > (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJEV(){
         // JEV [addr]
@@ -302,6 +347,8 @@ public class Run {
         if((float)stack.peek()%2 == 0){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readJUE(){
         // JUE [addr]
@@ -309,6 +356,8 @@ public class Run {
         if((float)stack.peek()%2 != 0){
             pos = peekIntOf4bites();
         }
+        stack.pop();
+        stack.pop();
     }
     private void readCurch(){
         // CURCH [constant]
@@ -339,6 +388,7 @@ public class Run {
             }
         }
         chunkSize = (int)stack.peek();
+        stack.pop();
     }
     private void readChusz(){
         // CHUSZ [constant]
@@ -414,6 +464,8 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
+        stack.pop();
+        stack.pop();
     }
 
     private void readSign() {
@@ -421,6 +473,7 @@ public class Run {
         // change the sign of the last value of stack
         next();
         stack.push(-(int)stack.peek());
+        stack.pop();
     }
 
     private void readPush(){
@@ -460,11 +513,15 @@ public class Run {
             nst.push(stack.get(stack.size()-1-i));
         }
         stack.push(nst);
+        for(int i = 0; i < size; i++) {
+            stack.pop();
+        }
     }
     private void readFRGET(){
         // FRGET [constant]
         Object get = ((Object[])stack.peek())[(int)retConstant(peek())];
         stack.push(get);
+        stack.pop();
     }
     private void readCLR(){
         // CLR
@@ -492,6 +549,7 @@ public class Run {
         next();
         // IO operation
         System.out.println(stack.get(stack.size()-1));
+        stack.pop();
     }
     private void readInp(){
         // INP
@@ -500,6 +558,7 @@ public class Run {
         Scanner in = new Scanner(System.in);
         System.out.print(stack.get(stack.size()-1));
         String text = in.nextLine();
+        stack.pop();
         if(checkChunk(stack.size()+1))
             stack.push(text);
         else{

@@ -41,5 +41,6 @@ public class Instructions {
                         OP_JIF = 37,
                         OP_FRGET = 38,
                         OP_CLR = 39,
-                        OP_PROC = 40;
+                        OP_PROC = 40,
+                        OP_CALL_NATIVE = 41;
 }
