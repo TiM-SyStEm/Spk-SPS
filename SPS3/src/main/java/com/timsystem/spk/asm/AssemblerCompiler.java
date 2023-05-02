@@ -36,6 +36,25 @@ public class AssemblerCompiler {
     public static Bytecode compile(String assembler) {
         CompilationState state = new CompilationState(PARSE_SEGMENT_ASM, BUILD_UNDEFINED);
         Bytecode bytecode = new Bytecode();
+        
+        // Processing includes
+        ArrayList<String> includedFiles = new ArrayList<>();
+        for (String line : assembler.split("\n")) {
+            line = line.trim();
+            String[] parts = line.split(" ");
+            if (parts[0].equals("#inc")) {
+                try {
+                    ArrayList<String> includePath = new ArrayList<>(getSliceOfStream(Arrays.stream(parts), 1, parts.length).toList());
+                    String includeFile = String.join(" ", includePath);
+                    if (includedFiles.contains(includeFile)) continue;
+                    assembler = Files.readString(Path.of(includeFile)) + "\n" + assembler;
+                    includedFiles.add(includeFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        
         // Three-pass SPK assembler compilation
         // First pass - compile .data section
         // Second pass - traverse all labels
