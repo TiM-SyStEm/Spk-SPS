@@ -29,7 +29,7 @@ public class RawBytecode {
     public static String save(Bytecode bytecode) {
         StringBuilder result = new StringBuilder();
         for (byte b : bytecode.getBytecode()) {
-            result.append((char) b);
+            result.append(String.valueOf(b) + " ");
         }
         result.append("\n");
         for (int line : bytecode.getLines()) {
@@ -49,8 +49,9 @@ public class RawBytecode {
         String[] lines = raw.split("\n");
         // Parsing opcodes
         String opcodes = lines[0];
-        for (byte b : opcodes.getBytes()) {
-            result.getBytecode().add(b);
+        for (String opcode : opcodes.split(" ")) {
+            if (opcode.equals("")) continue;
+            result.getBytecode().add(Byte.parseByte(opcode));
         }
         // Parsing lines
         String lNumbers = lines[1];
