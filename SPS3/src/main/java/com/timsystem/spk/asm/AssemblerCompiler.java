@@ -8,7 +8,9 @@ import com.timsystem.spk.vm.SPKException;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Stream;
@@ -36,7 +38,7 @@ public class AssemblerCompiler {
     public static Bytecode compile(String assembler) {
         CompilationState state = new CompilationState(PARSE_SEGMENT_ASM, BUILD_UNDEFINED);
         Bytecode bytecode = new Bytecode();
-        
+
         // Processing includes
         ArrayList<String> includedFiles = new ArrayList<>();
         for (String line : assembler.split("\n")) {
@@ -54,7 +56,7 @@ public class AssemblerCompiler {
                 }
             }
         }
-        
+
         // Three-pass SPK assembler compilation
         // First pass - compile .data section
         // Second pass - traverse all labels
@@ -217,9 +219,6 @@ public class AssemblerCompiler {
                 char operation = parts[1].replace("'", "").charAt(0);
                 bytecode.writeBinary(operation, lineNumber);
             }
-            case "negate" -> {
-                bytecode.writeInstruction(Instructions.OP_NEGATE, lineNumber);
-            }
             case "create_var" -> {
                 String varName = parts[1];
                 bytecode.writeInstruction(Instructions.OP_CREATE_VAR, lineNumber);
@@ -239,9 +238,6 @@ public class AssemblerCompiler {
             }
             case "curch" -> {
                 bytecode.writeInstruction(Instructions.OP_CURCH, lineNumber);
-            }
-            case "chusz" -> {
-                bytecode.writeInstruction(Instructions.OP_CHUSZ, lineNumber);
             }
             case "jmp" -> {
                 imitateJump(Instructions.OP_JMP, bytecode, parts, lineNumber, compileLabels);

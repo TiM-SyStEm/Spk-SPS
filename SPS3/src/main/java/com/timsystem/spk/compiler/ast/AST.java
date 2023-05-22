@@ -4,6 +4,6 @@ import com.timsystem.spk.vm.Bytecode;
 
 public interface AST {
 
-    void compile(Bytecode bytecode);
+    String compile();
 
 }

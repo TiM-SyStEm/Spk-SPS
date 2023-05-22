@@ -41,6 +41,14 @@ public class Parser {
             consume(TokenType.EQ);
             return new DefineVariableAST(term(), name, line());
         }
+        return stdout();
+    }
+    private AST stdout(){
+        if (match(TokenType.OUT)) {
+            if (match(TokenType.COLON))
+                return new StdOutAST(term(), line());
+        }
+        // else ERROR
         return term();
     }
 
@@ -56,9 +64,11 @@ public class Parser {
 
     private AST factor() {
         AST expr = unary();
-        while (match(TokenType.STAR, TokenType.SLASH)) {
-            char operation = accumulator.previous.getType() == TokenType.STAR ?
-                    '*' : '/';
+        while (match(TokenType.STAR, TokenType.SLASH, TokenType.REMAINDER, TokenType.DOUBLESLASH)) {
+            char operation = ' ';
+            if (accumulator.previous.getType() == TokenType.STAR) operation = '*';
+            else if (accumulator.previous.getType() == TokenType.SLASH) operation = '/';
+            else if (accumulator.previous.getType() == TokenType.REMAINDER) operation = '%';
             expr = new BinaryAST(expr, unary(), operation, accumulator.previous.getLine());
         }
         return expr;

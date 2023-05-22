@@ -75,5 +75,6 @@ public enum TokenType {
     PRIVATE,
     PROTECTED,
     AT,
-    LIGHTSTRUCT
+    LIGHTSTRUCT,
+    DOUBLESLASH
 }

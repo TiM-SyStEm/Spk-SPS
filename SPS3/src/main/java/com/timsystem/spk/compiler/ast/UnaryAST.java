@@ -16,11 +16,13 @@ public class UnaryAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
-        expr.compile(bytecode);
+    public String compile() {
+        expr.compile();
+        String acc = "";
         switch (operation) {
-            case '-' -> bytecode.writeInstruction(Instructions.OP_NEGATE, line);
+            case '-' -> acc = "SIGN";
         }
+        return acc;
     }
 
     @Override

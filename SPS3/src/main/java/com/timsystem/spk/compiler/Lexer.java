@@ -38,6 +38,7 @@ public class Lexer {
         OPERATORS.put("^", TokenType.POW);
         OPERATORS.put("|", TokenType.BAR);
 
+        OPERATORS.put("!=", TokenType.DOUBLESLASH);
         OPERATORS.put("!=", TokenType.NOTEQ);
         OPERATORS.put("==", TokenType.EQEQ);
         OPERATORS.put(">=", TokenType.GTEQ);

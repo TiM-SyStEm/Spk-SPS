@@ -16,10 +16,12 @@ public class BinaryAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
-        expr1.compile(bytecode);
-        expr2.compile(bytecode);
-        bytecode.writeBinary(operation, line);
+    public String compile() {
+        String acc = "";
+        acc += expr1.compile() + "\n";
+        acc += expr2.compile() + "\n";
+        acc += "BINARY '" + operation + "'\n";
+        return acc;
     }
 
     @Override

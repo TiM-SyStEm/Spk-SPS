@@ -1,6 +1,7 @@
 package com.timsystem.spk.compiler.ast;
 
 import com.timsystem.spk.vm.Bytecode;
+import com.timsystem.spk.compiler.lib.SPASTranslator;
 
 public class ConstantAST implements AST {
 
@@ -13,8 +14,9 @@ public class ConstantAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
-        bytecode.writeConstant(constant, line);
+    public String compile() {
+        String acc = "PUSH inline " + SPASTranslator.getSPASRepresentation(constant);
+        return acc;
     }
 
     public Object getConstant() {

@@ -14,11 +14,13 @@ public class ProgramAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
+    public String compile() {
+        String acc = "#build sps\n";
         for (AST ast : program) {
-            ast.compile(bytecode);
+            acc += ast.compile();
         }
-        bytecode.writeInstruction(Instructions.OP_HALT, -1);
+        acc += "HALT";
+        return acc;
     }
 
     public ArrayList<AST> getProgram() {

@@ -12,13 +12,14 @@ public class Instructions {
                         OP_INP = 8,
                         OP_HALT = 9,
                         OP_BINARY = 10,
-                        OP_NEGATE = 11,
+                        OP_PUSH_SCOPE = 11,
                         OP_CREATE_VAR = 12, // variable creation
                         OP_GET_VAR = 13, // retrieve variable value
-                        OP_SIGN = 14,
-                        OP_CHUNKS = 15,
-                        OP_CURCH = 16,
-                        OP_CHUSZ = 17,
+                        OP_POP_SCOPE = 14,
+                        OP_SIGN = 15,
+                        OP_CHUNKS = 16,
+                        OP_CURCH = 17,
+
                         OP_JMP = 18,
                         OP_JE = 19,
                         OP_JNE = 20,
@@ -41,6 +42,5 @@ public class Instructions {
                         OP_JIF = 37,
                         OP_FRGET = 38,
                         OP_CLR = 39,
-                        OP_PROC = 40,
-                        OP_CALL_NATIVE = 41;
+                        OP_CALL_NATIVE = 40;
 }

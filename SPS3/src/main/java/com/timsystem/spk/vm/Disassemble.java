@@ -54,8 +54,11 @@ public class Disassemble {
                     characterInstruction("OP_BINARY", bytecode, i);
                     i++; // operator char
                 }
-                case Instructions.OP_NEGATE -> {
-                    immediateInstruction("OP_NEGATE");
+                case Instructions.OP_PUSH_SCOPE -> {
+                    immediateInstruction("OP_PUSH_SCOPE");
+                }
+                case Instructions.OP_POP_SCOPE -> {
+                    immediateInstruction("OP_POP_SCOPE");
                 }
                 case Instructions.OP_GET_VAR -> {
                     byte[] indexBytes = new byte[]{

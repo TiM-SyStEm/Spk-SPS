@@ -6,6 +6,7 @@ import com.timsystem.spk.vm.runtime.Natives;
 import com.timsystem.spk.vm.runtime.SPKVMCore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -21,8 +22,10 @@ public class Run {
     private ArrayList<Stack<Object>> chunks;
     private int loopingCount = 0;
     private int loopCounter = 0;
-    private Stack<Integer> callsStack = new Stack<>();
-    private boolean procRead;
+    private Stack<Integer> callsStack;
+    private HashMap<String,Object> globals;
+    private HashMap<String,Object> locals;
+    private boolean scope;
 
     public Run(Bytecode bytecode){
         this.bytecode = bytecode;
@@ -32,6 +35,11 @@ public class Run {
         bytes = bytecode.getBytecode();
         // initialize stack
         stack = new Stack<>();
+        callsStack = new Stack<>();
+        // initialize global varibles
+        globals = new HashMap<>();
+        // initialize locals
+        locals = new HashMap<>();
         // initialize SPKVMCore functions
         new SPKVMCore();
         read();
@@ -91,10 +99,6 @@ public class Run {
                         // CURCH
                         // choose current chunk
                         readCurch();
-                    case Instructions.OP_CHUSZ->
-                        // CUSZ
-                        // choose chunk size
-                        readChusz();
                     case Instructions.OP_JMP->
                         // JMP
                         // jump to label
@@ -183,6 +187,20 @@ public class Run {
                         // CALL_NATIVE
                         // call the native function from Java
                         readCALLNATIVE();
+                    case Instructions.OP_CREATE_VAR->
+                        // CREATE_VAR
+                        // create variable
+                        readCREATE_VAR();
+                    case Instructions.OP_GET_VAR->
+                        // GET_VAR
+                        // push value of variable
+                        readGET_VAR();
+                    case Instructions.OP_PUSH_SCOPE->
+                        // PUSH_SCOPE
+                        scope = true;
+                    case Instructions.OP_POP_SCOPE->
+                        // PUSH_SCOPE
+                        scope = false;
                     default -> {
                         next();
                     }
@@ -193,6 +211,20 @@ public class Run {
                 }*/
             }
         }
+    }
+    private void readGET_VAR(){
+        next();
+        String name = (String)retConstant(peek());
+        if(!scope)
+            stack.push(globals.get(name));
+        else stack.push(locals.get(name));
+    }
+    private void readCREATE_VAR(){
+        next();
+        if(!scope)
+            globals.put((String)retConstant(peek()), stack.peek());
+        else locals.put((String)retConstant(peek()), stack.peek());
+        stack.pop();
     }
     private void readCALLNATIVE(){
         next();
@@ -375,6 +407,7 @@ public class Run {
         chunks = new ArrayList<>();
         // Convert std stack to chunkising stack
         Stack<Object> st = new Stack<>();
+        chunkSize = double2int(stack.peek());
         for(int i = 0; i < stack.size()-1; i++){
             if(i > chunkSize){
                 st.push(stack.get(i));
@@ -387,22 +420,17 @@ public class Run {
                 st = new Stack<>();
             }
         }
-        chunkSize = (int)stack.peek();
-        stack.pop();
-    }
-    private void readChusz(){
-        // CHUSZ [constant]
-        next();
-        chunkSize = (int)retConstant(peek());
     }
     private void readBinary() {
         // BINARY [char]
         next();
         if((char)peek() == '+'){
             // SUM
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            int r = o1+o2;
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = o1+o2;
+            stack.pop();
+            stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
             else{
@@ -411,9 +439,11 @@ public class Run {
         }
         else if((char)peek() == '-'){
             // SUB
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            int r = o1-o2;
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = o1-o2;
+            stack.pop();
+            stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
             else{
@@ -422,9 +452,11 @@ public class Run {
         }
         else if((char)peek() == '*'){
             // MUL
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            int r = o1*o2;
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = o1*o2;
+            stack.pop();
+            stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
             else{
@@ -433,9 +465,11 @@ public class Run {
         }
         else if((char)peek() == '/'){
             // DIVIDE
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            float r = (float)o1 / o2;
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = o1 / o2;
+            stack.pop();
+            stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
             else{
@@ -444,36 +478,27 @@ public class Run {
         }
         else if((char)peek() == '%'){
             // MOD
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            int r = o1%o2;
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = o1%o2;
+            stack.pop();
+            stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
             else{
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '#'){
-            // DIV
-            int o1 = (int)stack.peek();
-            int o2 = (int)stack.get(stack.size()-2);
-            int r = o1/o2;
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        stack.pop();
-        stack.pop();
+        next();
     }
 
     private void readSign() {
         // POSITIVE
         // change the sign of the last value of stack
         next();
-        stack.push(-(int)stack.peek());
+        int num = double2int(stack.peek());
         stack.pop();
+        stack.push(-num);
     }
 
     private void readPush(){
@@ -507,7 +532,7 @@ public class Run {
     private void readFrame(){
         // FRAME [constant]
         next();
-        int size = (int)retConstant(peek());
+        int size = double2int(retConstant(peek()));
         Stack<Object> nst = new Stack<>();
         for(int i = 0; i < size; i++){
             nst.push(stack.get(stack.size()-1-i));
@@ -564,6 +589,13 @@ public class Run {
         else{
             throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
         }
+    }
+    private int double2int(Object o){
+        if(o instanceof Integer){
+            return (int)o;
+        }
+        Double dd = (Double)o;
+        return dd.intValue();
     }
     private byte peek(){
         return bytes.get(pos);

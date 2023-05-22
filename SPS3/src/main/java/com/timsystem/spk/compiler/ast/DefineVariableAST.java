@@ -16,10 +16,11 @@ public class DefineVariableAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
-        expr.compile(bytecode);
-        bytecode.writeInstruction(Instructions.OP_CREATE_VAR, line);
-        bytecode.writeRawConstant(name, line);
+    public String compile() {
+        String acc = "";
+        acc += expr.compile();
+        acc += "CREATE_VAR " + name + "\n";
+        return acc;
     }
 
     public AST getExpr() {

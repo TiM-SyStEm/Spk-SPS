@@ -14,9 +14,9 @@ public class VariableAST implements AST {
     }
 
     @Override
-    public void compile(Bytecode bytecode) {
-        bytecode.writeInstruction(Instructions.OP_GET_VAR, line);
-        bytecode.writeRawConstant(variable, line);
+    public String compile() {
+        String acc = "GET_VAR " + variable;
+        return acc;
     }
 
     public String getVariable() {

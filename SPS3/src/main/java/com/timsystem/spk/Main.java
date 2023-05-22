@@ -6,6 +6,9 @@ import java.util.ArrayList;
 
 import com.timsystem.spk.asm.AssemblerCompiler;
 import com.timsystem.spk.asm.RawBytecode;
+import com.timsystem.spk.compiler.Lexer;
+import com.timsystem.spk.compiler.Parser;
+import com.timsystem.spk.compiler.ast.AST;
 import com.timsystem.spk.vm.Bytecode;
 import com.timsystem.spk.vm.Disassemble;
 import com.timsystem.spk.vm.Run;
@@ -89,7 +92,15 @@ public class Main {
                     }
                 }
                 case "run" -> {
-                    if(arg.charAt(arg.length()-1) == 'k' &&
+                    Parser parser = new Parser(new Lexer("var abc = 2+2;out : abc%2"));
+                    AST ast = parser.parse();
+                    String str = ast.compile();
+                    System.out.println(str);
+                    Bytecode bytecode = AssemblerCompiler.compile(str);
+                    RawBytecode.saveToFile(bytecode, SPKfile2SPKVM(arg));
+                    Run run = new Run(bytecode);
+                    run.run();
+                    /*if(arg.charAt(arg.length()-1) == 'k' &&
                             arg.charAt(arg.length()-2) == 'p' &&
                             arg.charAt(arg.length()-3) == 's' &&
                             arg.charAt(arg.length()-4) == '.'){
@@ -97,7 +108,7 @@ public class Main {
                     }
                     else{
 
-                    }
+                    }*/
                 }
                 case "spas" -> {
                     if(flags.contains("comp")){
@@ -130,6 +141,12 @@ public class Main {
             spkvm.setCharAt(spas.length()-2, 'k');
             spkvm.setCharAt(spas.length()-3, 'p');
             spkvm.setCharAt(spas.length()-4, 's');
+            spkvm.append("m");
+            return spkvm.toString();
+        }
+        private String SPKfile2SPKVM(String spas){
+            StringBuilder spkvm = new StringBuilder(spas);
+            spkvm.append("v");
             spkvm.append("m");
             return spkvm.toString();
         }
