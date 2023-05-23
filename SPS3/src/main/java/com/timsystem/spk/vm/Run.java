@@ -201,6 +201,12 @@ public class Run {
                     case Instructions.OP_POP_SCOPE->
                         // PUSH_SCOPE
                         scope = false;
+                    case Instructions.OP_EDIT_VAR->
+                        // EDIT_VAR
+                        readEDIT_VAR();
+                    case Instructions.OP_DEL_VAR->
+                        // DEL_VAR
+                        readDEL_VAR();
                     default -> {
                         next();
                     }
@@ -212,6 +218,36 @@ public class Run {
             }
         }
     }
+    private void readDEL_VAR(){
+        next();
+        String name = (String)retConstant(peek());
+        if(!scope)
+            stack.push(globals.remove(name));
+        else stack.push(locals.remove(name));
+    }
+    private void readEDIT_VAR(){
+        next();
+        String name = (String)retConstant(peek());
+        if(!scope) {
+            Object test = globals.get(name);
+            if(test != null) {
+                globals.put((String)name, stack.peek());
+            }
+            else {
+                //ERROR
+            }
+        }
+        else {
+            Object test = locals.get(name);
+            if(test != null) {
+                locals.put((String)name, stack.peek());
+            }
+            else {
+                //ERROR
+            }
+        }
+        stack.pop();
+    }
     private void readGET_VAR(){
         next();
         String name = (String)retConstant(peek());
@@ -221,9 +257,25 @@ public class Run {
     }
     private void readCREATE_VAR(){
         next();
-        if(!scope)
-            globals.put((String)retConstant(peek()), stack.peek());
-        else locals.put((String)retConstant(peek()), stack.peek());
+        String name = (String)retConstant(peek());
+        if(!scope) {
+            Object test = globals.get(name);
+            if(test == null) {
+                globals.put((String)name, stack.peek());
+            }
+            else {
+                //ERROR
+            }
+        }
+        else {
+            Object test = locals.get(name);
+            if(test == null) {
+                locals.put((String)name, stack.peek());
+            }
+            else {
+                //ERROR
+            }
+        }
         stack.pop();
     }
     private void readCALLNATIVE(){
@@ -424,11 +476,63 @@ public class Run {
     private void readBinary() {
         // BINARY [char]
         next();
-        if((char)peek() == '+'){
+        if(stack.peek() instanceof Boolean){
+            if(stack.get(stack.size()-2) instanceof Boolean){
+                if((char)peek() == '*'){
+                    // BOOLEAN AND
+                    boolean r = (boolean)stack.peek() && (boolean)stack.get(stack.size()-2);
+                    stack.pop();
+                    stack.pop();
+                    if(checkChunk(stack.size()+1))
+                        stack.push(r);
+                    else{
+                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+                    }
+                }
+                else if((char)peek() == '+'){
+                    // BOOLEAN OR
+                    boolean r = (boolean)stack.peek() || (boolean)stack.get(stack.size()-2);
+                    stack.pop();
+                    stack.pop();
+                    if(checkChunk(stack.size()+1))
+                        stack.push(r);
+                    else{
+                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+                    }
+                }
+                else if((char)peek() == '^'){
+                    // BOOLEAN XOR
+                    boolean r = (boolean)stack.peek() ^ (boolean)stack.get(stack.size()-2);
+                    stack.pop();
+                    stack.pop();
+                    if(checkChunk(stack.size()+1))
+                        stack.push(r);
+                    else{
+                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+                    }
+                }
+            }
+            else{
+                //ERROR
+            }
+        }
+        else if((char)peek() == '^'){
+            double o1 = (double)stack.peek();
+            double o2 = (double)stack.get(stack.size()-2);
+            double r = Math.pow(o1, o2);
+            stack.pop();
+            stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(r);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        }
+        else if((char)peek() == '+'){
             // SUM
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
-            double r = o1+o2;
+            double r = o2+o1;
             stack.pop();
             stack.pop();
             if(checkChunk(stack.size()+1))
@@ -441,7 +545,7 @@ public class Run {
             // SUB
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
-            double r = o1-o2;
+            double r = o2-o1;
             stack.pop();
             stack.pop();
             if(checkChunk(stack.size()+1))
@@ -454,7 +558,7 @@ public class Run {
             // MUL
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
-            double r = o1*o2;
+            double r = o2*o1;
             stack.pop();
             stack.pop();
             if(checkChunk(stack.size()+1))
@@ -467,7 +571,7 @@ public class Run {
             // DIVIDE
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
-            double r = o1 / o2;
+            double r = o2 / o1;
             stack.pop();
             stack.pop();
             if(checkChunk(stack.size()+1))
@@ -480,7 +584,7 @@ public class Run {
             // MOD
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
-            double r = o1%o2;
+            double r = o2 % o1;
             stack.pop();
             stack.pop();
             if(checkChunk(stack.size()+1))
@@ -496,9 +600,16 @@ public class Run {
         // POSITIVE
         // change the sign of the last value of stack
         next();
-        int num = double2int(stack.peek());
-        stack.pop();
-        stack.push(-num);
+        if(stack.peek() instanceof Boolean){
+            boolean r = !(boolean)stack.peek();
+            stack.pop();
+            stack.push(r);
+        }
+        else{
+            int num = double2int(stack.peek());
+            stack.pop();
+            stack.push(-num);
+        }
     }
 
     private void readPush(){
@@ -573,7 +684,10 @@ public class Run {
         // OUT
         next();
         // IO operation
-        System.out.println(stack.get(stack.size()-1));
+        if(stack.get(stack.size()-1) == "\0"){
+            System.out.println("Null");
+        }
+        else System.out.println(stack.get(stack.size()-1));
         stack.pop();
     }
     private void readInp(){

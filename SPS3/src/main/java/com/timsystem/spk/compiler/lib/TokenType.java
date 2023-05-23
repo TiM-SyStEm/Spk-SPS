@@ -19,10 +19,7 @@ public enum TokenType {
     MINUSEQ,
     SLASHEQ,
     STAREQ,
-    NOT,
     NOTEQ,
-    OR,
-    AND,
     COLON,
     FIELD,
     LT,
@@ -76,5 +73,6 @@ public enum TokenType {
     PROTECTED,
     AT,
     LIGHTSTRUCT,
-    DOUBLESLASH
+    BOOLEAN,
+    NULL
 }

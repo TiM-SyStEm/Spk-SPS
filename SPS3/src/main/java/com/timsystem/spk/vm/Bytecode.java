@@ -51,6 +51,7 @@ public class Bytecode {
     public void writeBinary(char operation, int line) {
         writeInstruction(Instructions.OP_BINARY, line);
         writeInstruction((byte) operation, line);
+        lines.add(line);
     }
 
     public ArrayList<Byte> getBytecode() {

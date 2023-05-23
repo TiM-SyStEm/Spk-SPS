@@ -18,7 +18,7 @@ public class DefineVariableAST implements AST {
     @Override
     public String compile() {
         String acc = "";
-        acc += expr.compile();
+        acc += expr.compile() + "\n";
         acc += "CREATE_VAR " + name + "\n";
         return acc;
     }

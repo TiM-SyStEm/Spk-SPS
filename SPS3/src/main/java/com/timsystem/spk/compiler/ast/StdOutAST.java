@@ -10,7 +10,7 @@ public class StdOutAST implements AST{
 
     @Override
     public String compile() {
-        String acc = value.compile();
+        String acc = value.compile() + "\n";
         acc += "OUT\n";
         return acc;
     }

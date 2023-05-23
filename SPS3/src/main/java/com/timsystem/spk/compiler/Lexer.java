@@ -38,7 +38,6 @@ public class Lexer {
         OPERATORS.put("^", TokenType.POW);
         OPERATORS.put("|", TokenType.BAR);
 
-        OPERATORS.put("!=", TokenType.DOUBLESLASH);
         OPERATORS.put("!=", TokenType.NOTEQ);
         OPERATORS.put("==", TokenType.EQEQ);
         OPERATORS.put(">=", TokenType.GTEQ);
@@ -59,15 +58,19 @@ public class Lexer {
         KEYWORDS = new HashMap<>();
         KEYWORDS.put("out", TokenType.OUT);
         KEYWORDS.put("input", TokenType.INPUT);
+        KEYWORDS.put("True", TokenType.BOOLEAN);
+        KEYWORDS.put("False", TokenType.BOOLEAN);
+        KEYWORDS.put("Null", TokenType.NULL);
         KEYWORDS.put("Add", TokenType.ADD);
         KEYWORDS.put("var", TokenType.VAR);
         KEYWORDS.put("fun", TokenType.FUN);
         KEYWORDS.put("return", TokenType.RETURN);
         KEYWORDS.put("if", TokenType.IF);
         KEYWORDS.put("else", TokenType.ELSE);
-        KEYWORDS.put("and", TokenType.AND);
-        KEYWORDS.put("not", TokenType.NOT);
-        KEYWORDS.put("or", TokenType.OR);
+        KEYWORDS.put("and", TokenType.STAR);
+        KEYWORDS.put("not", TokenType.MINUS);
+        KEYWORDS.put("or", TokenType.PLUS);
+        KEYWORDS.put("xor", TokenType.POW);
         KEYWORDS.put("in", TokenType.IN);
         KEYWORDS.put("while", TokenType.WHILE);
         KEYWORDS.put("field", TokenType.FIELD);

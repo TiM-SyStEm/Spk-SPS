@@ -224,9 +224,19 @@ public class AssemblerCompiler {
                 bytecode.writeInstruction(Instructions.OP_CREATE_VAR, lineNumber);
                 bytecode.writeRawConstant(varName, lineNumber);
             }
+            case "edit_var" -> {
+                String varName = parts[1];
+                bytecode.writeInstruction(Instructions.OP_EDIT_VAR, lineNumber);
+                bytecode.writeRawConstant(varName, lineNumber);
+            }
             case "get_var" -> {
                 String varName = parts[1];
                 bytecode.writeInstruction(Instructions.OP_GET_VAR, lineNumber);
+                bytecode.writeRawConstant(varName, lineNumber);
+            }
+            case "del_var" -> {
+                String varName = parts[1];
+                bytecode.writeInstruction(Instructions.OP_DEL_VAR, lineNumber);
                 bytecode.writeRawConstant(varName, lineNumber);
             }
             case "sign" -> {
@@ -316,6 +326,9 @@ public class AssemblerCompiler {
         if (firstWord.equals("true") || firstWord.equals("false")) {
             return firstWord.equals("true");
         }
+        else if(firstWord.equals("null")){
+            return "\0";
+        }
         try {
             return Double.parseDouble(firstWord);
         } catch (NumberFormatException ex) {
@@ -323,7 +336,7 @@ public class AssemblerCompiler {
                 return String.join(" ", getSliceOfStream(Arrays.stream(parts), parseShift, parts.length).toList()).replace("\"", "");
             }
         }
-        throw new SPKException("AssemblerErorr", "malformed inline expression", line);
+        throw new SPKException("AssemblerError", "malformed inline expression", line);
     }
 
     private static void imitateCall(Bytecode bytecode, String[] parts, int line) {

@@ -1,5 +1,6 @@
 package com.timsystem.spk;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -92,14 +93,18 @@ public class Main {
                     }
                 }
                 case "run" -> {
-                    Parser parser = new Parser(new Lexer("var abc = 2+2;out : abc%2"));
-                    AST ast = parser.parse();
-                    String str = ast.compile();
-                    System.out.println(str);
-                    Bytecode bytecode = AssemblerCompiler.compile(str);
-                    RawBytecode.saveToFile(bytecode, SPKfile2SPKVM(arg));
-                    Run run = new Run(bytecode);
-                    run.run();
+                    try {
+                        Parser parser = new Parser(new Lexer(Files.readString(Paths.get(arg))));
+                        AST ast = parser.parse();
+                        String str = ast.compile();
+                        //System.out.println(str);
+                        Bytecode bytecode = AssemblerCompiler.compile(str);
+                        RawBytecode.saveToFile(bytecode, SPKfile2SPKVM(arg));
+                        Run run = new Run(bytecode);
+                        run.run();
+                    } catch (IOException ex) {
+                        //ERROR
+                    }
                     /*if(arg.charAt(arg.length()-1) == 'k' &&
                             arg.charAt(arg.length()-2) == 'p' &&
                             arg.charAt(arg.length()-3) == 's' &&

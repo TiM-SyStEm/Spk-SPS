@@ -17,10 +17,9 @@ public class UnaryAST implements AST {
 
     @Override
     public String compile() {
-        expr.compile();
-        String acc = "";
+        String acc = expr.compile() + "\n";
         switch (operation) {
-            case '-' -> acc = "SIGN";
+            case '-' -> acc += "SIGN\n";
         }
         return acc;
     }

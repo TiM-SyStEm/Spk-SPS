@@ -39,7 +39,17 @@ public class Parser {
         if (match(TokenType.VAR)) {
             String name = consume(TokenType.WORD).getText();
             consume(TokenType.EQ);
-            return new DefineVariableAST(term(), name, line());
+            return new DefineVariableAST(editvar(), name, line());
+        }
+        return editvar();
+    }
+    private AST editvar(){
+        if(match(TokenType.WORD)){
+            String name = accumulator.previous.getText();
+            if(match(TokenType.EQ)){
+                return new EditVariableAST(stdout(), name, line());
+            }
+            return stdout();
         }
         return stdout();
     }
@@ -47,8 +57,16 @@ public class Parser {
         if (match(TokenType.OUT)) {
             if (match(TokenType.COLON))
                 return new StdOutAST(term(), line());
+            // else ERROR
         }
-        // else ERROR
+        return stdinput();
+    }
+    private AST stdinput(){
+        if (match(TokenType.INPUT)) {
+            if (match(TokenType.COLON)){
+                return new StdInputAST(term(), line());
+            }
+        }
         return term();
     }
 
@@ -61,12 +79,12 @@ public class Parser {
         }
         return expr;
     }
-
     private AST factor() {
         AST expr = unary();
-        while (match(TokenType.STAR, TokenType.SLASH, TokenType.REMAINDER, TokenType.DOUBLESLASH)) {
+        while (match(TokenType.POW, TokenType.STAR, TokenType.SLASH, TokenType.REMAINDER)) {
             char operation = ' ';
-            if (accumulator.previous.getType() == TokenType.STAR) operation = '*';
+            if (accumulator.previous.getType() == TokenType.POW) operation = '^';
+            else if (accumulator.previous.getType() == TokenType.STAR) operation = '*';
             else if (accumulator.previous.getType() == TokenType.SLASH) operation = '/';
             else if (accumulator.previous.getType() == TokenType.REMAINDER) operation = '%';
             expr = new BinaryAST(expr, unary(), operation, accumulator.previous.getLine());
@@ -99,7 +117,17 @@ public class Parser {
             case WORD -> {
                 return new VariableAST(accumulator.previous.getText(), line());
             }
+            case STRING ->{
+                return new StringAST(accumulator.previous.getText(), line());
+            }
+            case BOOLEAN ->{
+                return new BooleanAST(accumulator.previous.getText(), line());
+            }
+            case NULL ->{
+                return new NullAST(line());
+            }
             default -> {
+                System.out.println(accumulator.previous);
                 throw new SPKException("ParseException", "bad expression", line());
             }
         }

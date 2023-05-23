@@ -42,5 +42,7 @@ public class Instructions {
                         OP_JIF = 37,
                         OP_FRGET = 38,
                         OP_CLR = 39,
-                        OP_CALL_NATIVE = 40;
+                        OP_CALL_NATIVE = 40,
+                        OP_EDIT_VAR = 41,
+                        OP_DEL_VAR = 42;
 }
