@@ -13,6 +13,7 @@ public class Parser {
 
     private Lexer lexer;
     private ParserAccumulator accumulator;
+    private int label_num = -1;
 
     public Parser(Lexer lexer) {
         this.lexer = lexer;
@@ -32,9 +33,26 @@ public class Parser {
     }
 
     private AST root() {
+        return docycle();
+    }
+    private AST blockOrStatement(){
+        if(match(TokenType.LBRACE)){
+            ArrayList<AST> arr = new ArrayList<>();
+            while (!match(TokenType.RBRACE)){
+                arr.add(root());
+            }
+            return new BlockAST(arr);
+        }
+        else{
+            return docycle();
+        }
+    }
+    private AST docycle(){
+        if(match(TokenType.DO)) {
+            return new DoAST(blockOrStatement(), label_num, line());
+        }
         return defining();
     }
-
     private AST defining() {
         if (match(TokenType.VAR)) {
             String name = consume(TokenType.WORD).getText();

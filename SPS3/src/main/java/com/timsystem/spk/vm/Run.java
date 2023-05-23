@@ -335,16 +335,26 @@ public class Run {
         next();
 
         if(loopingCount == 0 && loopCounter == 0){
-            loopingCount = ((Number)stack.peek()).intValue();
-            stack.pop();
+            if(stack.peek() instanceof Boolean && (boolean) stack.peek()){
+                loopingCount = -1;
+            }
+            else{
+                loopingCount = ((Number)stack.peek()).intValue();
+                stack.pop();
+            }
         }
-        loopCounter++;
-        if(loopingCount > loopCounter){
+        if(loopingCount != -1){
+            loopCounter++;
+            if(loopingCount > loopCounter){
+                pos = peekIntOf4bites();
+            }
+            else if(loopingCount-1 == loopCounter){
+                loopingCount = 0;
+                loopCounter = 0;
+            }
+        }
+        else{
             pos = peekIntOf4bites();
-        }
-        else if(loopingCount-1 == loopCounter){
-            loopingCount = 0;
-            loopCounter = 0;
         }
     }
     private void readJump(){
