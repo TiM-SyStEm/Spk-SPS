@@ -155,18 +155,6 @@ public class Run {
                         // RET
                         // return from procedure
                         readRET();
-                    case Instructions.OP_AND->
-                        // AND
-                        readAND();
-                    case Instructions.OP_OR->
-                        // OR
-                        readOR();
-                    case Instructions.OP_XOR->
-                        // XOR
-                        readXOR();
-                    case Instructions.OP_NOT->
-                        // NOT
-                        readNOT();
                     case Instructions.OP_JIT->
                         // JIT
                         // jump if end == true
@@ -298,29 +286,6 @@ public class Run {
             pos = peekIntOf4bites();
         }
         stack.pop();
-    }
-    private void readAND(){
-        boolean res = (boolean)stack.peek() && (boolean)stack.get(stack.size()-2);
-        stack.pop();
-        stack.pop();
-        stack.push(res);
-    }
-    private void readOR(){
-        boolean res = (boolean)stack.peek() || (boolean)stack.get(stack.size()-2);
-        stack.pop();
-        stack.pop();
-        stack.push(res);
-    }
-    private void readNOT(){
-        boolean res = !(boolean)stack.peek();
-        stack.pop();
-        stack.push(res);
-    }
-    private void readXOR(){
-        boolean res = (boolean)stack.peek() ^ (boolean)stack.get(stack.size()-2);
-        stack.pop();
-        stack.pop();
-        stack.push(res);
     }
     private void readCALL(){
         next();

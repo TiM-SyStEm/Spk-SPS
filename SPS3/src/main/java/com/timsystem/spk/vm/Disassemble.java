@@ -133,10 +133,6 @@ public class Disassemble {
                     i += 4;
                 }
                 case Instructions.OP_RET -> immediateInstruction("OP_RET");
-                case Instructions.OP_AND -> immediateInstruction("OP_AND");
-                case Instructions.OP_OR -> immediateInstruction("OP_OR");
-                case Instructions.OP_XOR -> immediateInstruction("OP_XOR");
-                case Instructions.OP_NOT -> immediateInstruction("OP_NOT");
                 case Instructions.OP_JIT -> {
                     jumpInstruction("OP_JIT", bytecode.getBytecode(), i);
                     i += 4;

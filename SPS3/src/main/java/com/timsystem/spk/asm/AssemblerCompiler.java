@@ -288,18 +288,6 @@ public class AssemblerCompiler {
             case "ret" -> {
                 bytecode.writeInstruction(Instructions.OP_RET, lineNumber);
             }
-            case "and" -> {
-                bytecode.writeInstruction(Instructions.OP_AND, lineNumber);
-            }
-            case "or" -> {
-                bytecode.writeInstruction(Instructions.OP_OR, lineNumber);
-            }
-            case "xor" -> {
-                bytecode.writeInstruction(Instructions.OP_XOR, lineNumber);
-            }
-            case "not" -> {
-                bytecode.writeInstruction(Instructions.OP_NOT, lineNumber);
-            }
             case "jit" -> {
                 imitateJump(Instructions.OP_JIT, bytecode, parts, lineNumber, compileLabels);
             }

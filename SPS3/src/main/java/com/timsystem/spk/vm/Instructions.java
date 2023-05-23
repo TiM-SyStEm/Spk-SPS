@@ -34,15 +34,13 @@ public class Instructions {
                         OP_LOOP = 29,
                         OP_CALL = 30,
                         OP_RET = 31,
-                        OP_AND = 32,
-                        OP_OR = 33,
+                        OP_EDIT_VAR = 32,
+                        OP_DEL_VAR = 33,
                         OP_XOR = 34,
                         OP_NOT = 35,
                         OP_JIT = 36,
                         OP_JIF = 37,
                         OP_FRGET = 38,
                         OP_CLR = 39,
-                        OP_CALL_NATIVE = 40,
-                        OP_EDIT_VAR = 41,
-                        OP_DEL_VAR = 42;
+                        OP_CALL_NATIVE = 40;
 }
