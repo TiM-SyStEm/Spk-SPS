@@ -3,6 +3,7 @@ package com.timsystem.spk.compiler;
 import com.timsystem.spk.compiler.ast.*;
 import com.timsystem.spk.compiler.lib.Token;
 import com.timsystem.spk.compiler.lib.TokenType;
+import com.timsystem.spk.vm.BinaryOperators;
 import com.timsystem.spk.vm.SPKException;
 
 import java.util.ArrayList;
@@ -33,20 +34,64 @@ public class Parser {
     }
 
     private AST root() {
-        return docycle();
+        return _if();
     }
-    private AST blockOrStatement(){
-        if(match(TokenType.LBRACE)){
-            ArrayList<AST> arr = new ArrayList<>();
-            while (!match(TokenType.RBRACE)){
-                arr.add(root());
+
+    private AST _if() {
+        if (match(TokenType.IF)) {
+            AST expr = root();
+            AST body = blockOrStatement();
+            AST elseBody = null;
+            if (match(TokenType.ELSE)) {
+                elseBody = blockOrStatement();
             }
-            return new BlockAST(arr);
+            return new BranchIfAST(expr, body, elseBody);
         }
-        else{
-            return docycle();
-        }
+        return stdout();
     }
+
+    private AST stdout(){
+        if (match(TokenType.OUT)) {
+            if (match(TokenType.COLON))
+                return new StdOutAST(root(), line());
+            // else ERROR
+        }
+        return stdinput();
+    }
+    private AST stdinput(){
+        if (match(TokenType.INPUT)) {
+            if (match(TokenType.COLON)){
+                return new StdInputAST(root(), line());
+            }
+        }
+        return conditional();
+    }
+
+    private AST conditional() {
+        AST expr1 = docycle();
+
+        if (match(TokenType.LT)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.LOWER, line());
+        }
+        if (match(TokenType.GT)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.GREATER, line());
+        }
+        if (match(TokenType.LTEQ)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL_LOWER, line());
+        }
+        if (match(TokenType.GTEQ)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL_GREATER, line());
+        }
+        if (match(TokenType.EQEQ)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL, line());
+        }
+        if (match(TokenType.NOTEQ)) {
+            return new BinaryAST(expr1, docycle(), BinaryOperators.NOT_EQUAL, line());
+        }
+
+        return expr1;
+    }
+
     private AST docycle(){
         if(match(TokenType.DO)) {
             return new DoAST(blockOrStatement(), label_num, line());
@@ -65,25 +110,9 @@ public class Parser {
         if(match(TokenType.WORD)){
             String name = accumulator.previous.getText();
             if(match(TokenType.EQ)){
-                return new EditVariableAST(stdout(), name, line());
+                return new EditVariableAST(term(), name, line());
             }
-            return stdout();
-        }
-        return stdout();
-    }
-    private AST stdout(){
-        if (match(TokenType.OUT)) {
-            if (match(TokenType.COLON))
-                return new StdOutAST(term(), line());
-            // else ERROR
-        }
-        return stdinput();
-    }
-    private AST stdinput(){
-        if (match(TokenType.INPUT)) {
-            if (match(TokenType.COLON)){
-                return new StdInputAST(term(), line());
-            }
+            return term();
         }
         return term();
     }
@@ -148,6 +177,19 @@ public class Parser {
                 System.out.println(accumulator.previous);
                 throw new SPKException("ParseException", "bad expression", line());
             }
+        }
+    }
+
+    private AST blockOrStatement(){
+        if(match(TokenType.LBRACE)){
+            ArrayList<AST> arr = new ArrayList<>();
+            while (!match(TokenType.RBRACE)){
+                arr.add(root());
+            }
+            return new BlockAST(arr);
+        }
+        else{
+            return root();
         }
     }
 

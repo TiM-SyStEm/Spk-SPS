@@ -1,6 +1,7 @@
 package com.timsystem.spk.compiler;
 
 
+import com.timsystem.spk.compiler.lib.AddProcessor;
 import com.timsystem.spk.compiler.lib.Token;
 import com.timsystem.spk.compiler.lib.TokenType;
 import com.timsystem.spk.vm.SPKException;
@@ -99,7 +100,8 @@ public class Lexer {
     private int line;
 
     public Lexer(String input) {
-        this.input = input;
+        this.input = AddProcessor.process(input);
+        System.out.println(input);
         this.pos = 0;
         this.line = 1;
     }
