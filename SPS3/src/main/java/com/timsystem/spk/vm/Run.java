@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Stack;
 
+import static com.timsystem.spk.vm.BinaryOperators.*;
+
 public class Run {
     private Bytecode bytecode;
     public static Stack<Object> stack;
@@ -491,7 +493,7 @@ public class Run {
                 //ERROR
             }
         }
-        else if((char)peek() == '^'){
+        else if((char)peek() == POW){
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
             double r = Math.pow(o1, o2);
@@ -503,7 +505,7 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '+'){
+        else if((char)peek() == ADD){
             // SUM
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
@@ -516,7 +518,7 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '-'){
+        else if((char)peek() == SUB){
             // SUB
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
@@ -529,7 +531,7 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '*'){
+        else if((char)peek() == MUL){
             // MUL
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
@@ -542,7 +544,7 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '/'){
+        else if((char)peek() == DIV){
             // DIVIDE
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
@@ -555,7 +557,7 @@ public class Run {
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
         }
-        else if((char)peek() == '%'){
+        else if((char)peek() == REM){
             // MOD
             double o1 = (double)stack.peek();
             double o2 = (double)stack.get(stack.size()-2);
@@ -564,6 +566,54 @@ public class Run {
             stack.pop();
             if(checkChunk(stack.size()+1))
                 stack.push(r);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == LOWER) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a < b);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == GREATER) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a > b);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == EQUAL_GREATER) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a >= b);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == EQUAL_LOWER) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a <= b);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == EQUAL) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a == b);
+            else{
+                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+            }
+        } else if ((char) peek() == NOT_EQUAL) {
+            double b = (double) stack.pop();
+            double a = (double) stack.pop();
+            if(checkChunk(stack.size()+1))
+                stack.push(a != b);
             else{
                 throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
             }
