@@ -1,6 +1,7 @@
 package com.timsystem.spk.vm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
+import com.timsystem.spk.vm.lib.Loop;
 import com.timsystem.spk.vm.runtime.Natives;
 import com.timsystem.spk.vm.runtime.SPKVMCore;
 
@@ -19,6 +20,8 @@ public class Run {
     private HashMap<String, Object> globals, locals;
     private Stack<Object> stack;
     private Stack<Integer> callStack;
+    private Stack<Loop> loopStack;
+    private Stack<Loop> localsStack;
     private ArrayList<Stack<Object>> chunks;
 
 
@@ -33,12 +36,15 @@ public class Run {
         this.locals = new HashMap<>();
         this.stack = new Stack<>();
         this.callStack = new Stack<>();
+        this.loopStack = new Stack<>();
+        this.localsStack = new Stack<>();
         SPKVMCore.inject();
     }
 
     public void run() {
         execution_loop:
         while (true) {
+            //System.out.println(ip);
             if (ip >= bytecode.getBytecode().size())
                 break execution_loop;
             byte instruction = next();
@@ -119,7 +125,16 @@ public class Run {
     }
 
     public void readLoop() {
-        throw new SPKException("UnimplementedOpcode", "OP_LOOP has no implementation!", line());
+        int ind = readIndex();
+        if(loopStack.size() == 0 || ind != loopStack.peek().getLabel()){
+            loopStack.push(new Loop(ind, object2number(pop()).intValue()));
+            ip = ind;
+        }
+        else{
+            Loop peek = loopStack.peek();
+            if(peek.getCounter() < peek.getCount()-1) {peek.setCounter(peek.getCounter()+1); ip = peek.getLabel();}
+            else loopStack.pop();
+        }
     }
 
     public void readFrGet() {
@@ -387,7 +402,9 @@ public class Run {
 
         return result;
     }
-
+    public void scoping(){
+        
+    }
     public Stack<Object> stack() {
         return stack;
     }
