@@ -2,6 +2,7 @@ package com.timsystem.spk.vm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
 import com.timsystem.spk.vm.runtime.Natives;
+import com.timsystem.spk.vm.runtime.SPKVMCore;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -10,7 +11,7 @@ import java.util.*;
 import static com.timsystem.spk.vm.Instructions.*;
 import static java.util.stream.Collectors.toList;
 
-public class RefactoredRun {
+public class Run {
 
     private int ip; // instruction [pointer
     private Bytecode bytecode;
@@ -24,7 +25,7 @@ public class RefactoredRun {
     private boolean scope;
     public static Scanner SPKVM_INPUT = new Scanner(System.in);
 
-    public RefactoredRun(Bytecode bytecode) {
+    public Run(Bytecode bytecode) {
         this.bytecode = bytecode;
         this.ip = 0;
 
@@ -32,6 +33,7 @@ public class RefactoredRun {
         this.locals = new HashMap<>();
         this.stack = new Stack<>();
         this.callStack = new Stack<>();
+        SPKVMCore.inject();
     }
 
     public void run() {
@@ -113,7 +115,7 @@ public class RefactoredRun {
     }
 
     public void readCallNative() {
-        Natives.Run((String) readConstant());
+        Natives.Run((String) readConstant(), this);
     }
 
     public void readLoop() {
@@ -300,7 +302,7 @@ public class RefactoredRun {
     }
 
     public void readInput() {
-        System.out.println(pop());
+        System.out.print(pop());
         push(SPKVM_INPUT.nextLine());
     }
 
@@ -312,8 +314,8 @@ public class RefactoredRun {
     public void readSwap() {
         Object b = pop();
         Object a = pop();
-        push(a);
         push(b);
+        push(a);
     }
 
     public void readFrame() {
@@ -386,4 +388,7 @@ public class RefactoredRun {
         return result;
     }
 
+    public Stack<Object> stack() {
+        return stack;
+    }
 }

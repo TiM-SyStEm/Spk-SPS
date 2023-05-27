@@ -9,7 +9,7 @@ public class Natives {
     public static void Add(String name, NativeFunc nf){
         natives.put(name, nf);
     }
-    public static void Run(String name){
-        natives.get(name).func(Run.stack);
+    public static void Run(String name, Run run){
+        natives.get(name).func(run);
     }
 }

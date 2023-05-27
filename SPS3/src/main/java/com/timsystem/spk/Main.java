@@ -12,7 +12,6 @@ import com.timsystem.spk.compiler.Parser;
 import com.timsystem.spk.compiler.ast.AST;
 import com.timsystem.spk.vm.Bytecode;
 import com.timsystem.spk.vm.Disassemble;
-import com.timsystem.spk.vm.RefactoredRun;
 import com.timsystem.spk.vm.Run;
 import org.fusesource.jansi.AnsiConsole;
 import java.util.Objects;
@@ -102,7 +101,7 @@ public class Main {
                         Bytecode bytecode = AssemblerCompiler.compile(str);
                         Disassemble.disassemble(arg, bytecode);
                         RawBytecode.saveToFile(bytecode, SPKfile2SPKVM(arg));
-                        RefactoredRun run = new RefactoredRun(bytecode);
+                        Run run = new Run(bytecode);
                         run.run();
                     } catch (IOException ex) {
                         //ERROR
