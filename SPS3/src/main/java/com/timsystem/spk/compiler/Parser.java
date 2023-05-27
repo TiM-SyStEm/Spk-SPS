@@ -27,17 +27,13 @@ public class Parser {
     public AST parse() {
         ArrayList<AST> block = new ArrayList<>();
         while (accumulator.current.getType() != TokenType.EOF) {
-            block.add(root());
+            block.add(statement());
             match(TokenType.SEMICOLON);
         }
         return new ProgramAST(block);
     }
 
-    private AST root() {
-        return _if();
-    }
-
-    private AST _if() {
+    public AST statement() {
         if (match(TokenType.IF)) {
             AST expr = root();
             AST body = blockOrStatement();
@@ -47,74 +43,57 @@ public class Parser {
             }
             return new BranchIfAST(expr, body, elseBody);
         }
-        return stdout();
+        if(match(TokenType.DO)) {
+            return new DoAST(blockOrStatement(), label_num, line());
+        }
+        if (match(TokenType.VAR)) {
+            String name = consume(TokenType.WORD).getText();
+            consume(TokenType.EQ);
+            return new DefineVariableAST(root(), name, line());
+        }
+
+        if(match(TokenType.WORD)){
+            String name = accumulator.previous.getText();
+            if(match(TokenType.EQ)){
+                return new EditVariableAST(root(), name, line());
+            }
+            return term();
+        }
+        if (match(TokenType.OUT)) {
+            consume(TokenType.COLON);
+            return new StdOutAST(root(), line());
+        }
+
+        return new PopAST(root());
     }
 
-    private AST stdout(){
-        if (match(TokenType.OUT)) {
-            if (match(TokenType.COLON))
-                return new StdOutAST(root(), line());
-            // else ERROR
-        }
-        return stdinput();
-    }
-    private AST stdinput(){
-        if (match(TokenType.INPUT)) {
-            if (match(TokenType.COLON)){
-                return new StdInputAST(root(), line());
-            }
-        }
+    private AST root() {
         return conditional();
     }
 
     private AST conditional() {
-        AST expr1 = docycle();
+        AST expr1 = term();
 
         if (match(TokenType.LT)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.LOWER, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.LOWER, line());
         }
         if (match(TokenType.GT)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.GREATER, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.GREATER, line());
         }
         if (match(TokenType.LTEQ)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL_LOWER, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.EQUAL_LOWER, line());
         }
         if (match(TokenType.GTEQ)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL_GREATER, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.EQUAL_GREATER, line());
         }
         if (match(TokenType.EQEQ)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.EQUAL, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.EQUAL, line());
         }
         if (match(TokenType.NOTEQ)) {
-            return new BinaryAST(expr1, docycle(), BinaryOperators.NOT_EQUAL, line());
+            return new BinaryAST(expr1, term(), BinaryOperators.NOT_EQUAL, line());
         }
 
         return expr1;
-    }
-
-    private AST docycle(){
-        if(match(TokenType.DO)) {
-            return new DoAST(blockOrStatement(), label_num, line());
-        }
-        return defining();
-    }
-    private AST defining() {
-        if (match(TokenType.VAR)) {
-            String name = consume(TokenType.WORD).getText();
-            consume(TokenType.EQ);
-            return new DefineVariableAST(editvar(), name, line());
-        }
-        return editvar();
-    }
-    private AST editvar(){
-        if(match(TokenType.WORD)){
-            String name = accumulator.previous.getText();
-            if(match(TokenType.EQ)){
-                return new EditVariableAST(term(), name, line());
-            }
-            return term();
-        }
-        return term();
     }
 
     private AST term() {
@@ -173,9 +152,13 @@ public class Parser {
             case NULL ->{
                 return new NullAST(line());
             }
+            case INPUT -> {
+                consume(TokenType.COLON);
+                return new StdInputAST(root(), line());
+            }
             default -> {
                 System.out.println(accumulator.previous);
-                throw new SPKException("ParseException", "bad expression", line());
+                throw new SPKException("ParseException", "bad expression " + accumulator.current, line());
             }
         }
     }
@@ -184,13 +167,11 @@ public class Parser {
         if(match(TokenType.LBRACE)){
             ArrayList<AST> arr = new ArrayList<>();
             while (!match(TokenType.RBRACE)){
-                arr.add(root());
+                arr.add(statement());
             }
             return new BlockAST(arr);
         }
-        else{
-            return root();
-        }
+        return statement();
     }
 
     private int line() {

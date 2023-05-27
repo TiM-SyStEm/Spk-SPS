@@ -1,782 +1,389 @@
 package com.timsystem.spk.vm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
-import com.timsystem.spk.vm.lib.JavaTuple;
 import com.timsystem.spk.vm.runtime.Natives;
-import com.timsystem.spk.vm.runtime.SPKVMCore;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
-import java.util.Stack;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
-import static com.timsystem.spk.vm.BinaryOperators.*;
+import static com.timsystem.spk.vm.Instructions.*;
+import static java.util.stream.Collectors.toList;
 
-public class Run {
+public class RefactoredRun {
+
+    private int ip; // instruction [pointer
     private Bytecode bytecode;
-    public static Stack<Object> stack;
-    private byte current;
-    private boolean isWork;
-    private int pos = 0;
-    private ArrayList<Byte> bytes;
-    private int chunkSize = 0;
-    private int line;
+
+    private HashMap<String, Object> globals, locals;
+    private Stack<Object> stack;
+    private Stack<Integer> callStack;
     private ArrayList<Stack<Object>> chunks;
-    private int loopingCount = 0;
-    private int loopCounter = 0;
-    private Stack<Integer> callsStack;
-    private HashMap<String,Object> globals;
-    private HashMap<String,Object> locals;
+
+
     private boolean scope;
+    public static Scanner SPKVM_INPUT = new Scanner(System.in);
 
-    public Run(Bytecode bytecode){
+    public RefactoredRun(Bytecode bytecode) {
         this.bytecode = bytecode;
-    }
-    public void run(){
-        // initialize bytes
-        bytes = bytecode.getBytecode();
-        // initialize stack
-        stack = new Stack<>();
-        callsStack = new Stack<>();
-        // initialize global varibles
-        globals = new HashMap<>();
-        // initialize locals
-        locals = new HashMap<>();
-        // initialize SPKVMCore functions
-        new SPKVMCore();
-        read();
-    }
-    public void read(){
-        isWork = true;
-        while(true){
-            if(!isWork) break;
-            else{
-                current = bytes.get(pos);
+        this.ip = 0;
 
-                switch (current) {
-                    case Instructions.OP_PUSH -> {
-                        // PUSH
-                        readPush();
-                    }
-                    case Instructions.OP_DUP -> {
-                        // DUP
-                        readDup();
-                    }
-                    case Instructions.OP_POP -> {
-                        // POP
-                        readPop();
-                    }
-                    case Instructions.OP_FRAME -> {
-                        // FRAME
-                        readFrame();
-                    }
-                    case Instructions.OP_FLIP -> {
-                        // FLIP
-                        readFlip();
-                    }
-                    case Instructions.OP_SWAP -> {
-                        // SWAP (swap end and pre-end)
-                        readSwap();
-                    }
-                    case Instructions.OP_OUT -> {
-                        // OUT
-                        readOut();
-                    }
-                    case Instructions.OP_INP -> {
-                        // INP
-                        readInp();
-                    }
-                    case Instructions.OP_HALT -> {
-                        // HALT
-                        isWork = false;
-                    }
-                    case Instructions.OP_SIGN ->
-                        readSign();
-                    case Instructions.OP_BINARY ->
-                        readBinary();
-                    case Instructions.OP_CHUNKS ->
-                        // CHUNKS
-                        readChunks();
-                    case Instructions.OP_CURCH->
-                        // CURCH
-                        // choose current chunk
-                        readCurch();
-                    case Instructions.OP_JMP->
-                        // JMP
-                        // jump to label
-                        readJump();
-                    case Instructions.OP_JE->
-                        // JE
-                        // jump to label if end equal pre-end
-                        readJE();
-                    case Instructions.OP_JNE->
-                        // JNE
-                        // jump to label if end not equal pre-end
-                        readJNE();
-                    case Instructions.OP_JL->
-                        // JL
-                        // jump to label if end less than pre-end
-                        readJL();
-                    case Instructions.OP_JG->
-                        // JG
-                        // jump to label if end greater than pre-end
-                        readJG();
-                    case Instructions.OP_JLE->
-                        // JLE
-                        // jump to label if end greater than pre-end or equal
-                        readJLE();
-                    case Instructions.OP_JGE->
-                        // JGE
-                        // jump to label if end less than pre-end or equal
-                        readJGE();
-                    case Instructions.OP_JLN->
-                        // JLN
-                        // end less and not greater and not equal pre-end
-                        readJLN();
-                    case Instructions.OP_JGN->
-                        // JGN
-                        // end greater and not less and not equal pre-end
-                        readJGN();
-                    case Instructions.OP_JEV->
-                        // JEV
-                        // even number
-                        readJEV();
-                    case Instructions.OP_JUE->
-                        // JUE
-                        // uneven number
-                        readJUE();
-                    case Instructions.OP_LOOP->
-                        // LOOP
-                        // from end of stack times and label
-                        readLOOP();
-                    case Instructions.OP_CALL->
-                        // CALL
-                        // from address
-                        readCALL();
-                    case Instructions.OP_RET->
-                        // RET
-                        // return from procedure
-                        readRET();
-                    case Instructions.OP_JIT->
-                        // JIT
-                        // jump if end == true
-                        readJIT();
-                    case Instructions.OP_JIF->
-                        // JIF
-                        // jump if end == false
-                        readJIF();
-                    case Instructions.OP_FRGET->
-                        // FRGET
-                        // get from frame by index and push value
-                        readFRGET();
-                    case Instructions.OP_CLR->
-                        // CLR
-                        // clear stack
-                        readCLR();
-                    case Instructions.OP_CALL_NATIVE->
-                        // CALL_NATIVE
-                        // call the native function from Java
-                        readCALLNATIVE();
-                    case Instructions.OP_CREATE_VAR->
-                        // CREATE_VAR
-                        // create variable
-                        readCREATE_VAR();
-                    case Instructions.OP_GET_VAR->
-                        // GET_VAR
-                        // push value of variable
-                        readGET_VAR();
-                    case Instructions.OP_PUSH_SCOPE->
-                        // PUSH_SCOPE
-                        scope = true;
-                    case Instructions.OP_POP_SCOPE->
-                        // PUSH_SCOPE
-                        scope = false;
-                    case Instructions.OP_EDIT_VAR->
-                        // EDIT_VAR
-                        readEDIT_VAR();
-                    case Instructions.OP_DEL_VAR->
-                        // DEL_VAR
-                        readDEL_VAR();
-                    default -> {
-                        next();
-                    }
-                }
-                /*for(Object o : stack){
-                    System.out.println(o);
-                    System.out.println("===========");
-                }*/
-            }
-        }
-    }
-    private void readDEL_VAR(){
-        next();
-        String name = (String)retConstant(peek());
-        if(!scope)
-            stack.push(globals.remove(name));
-        else stack.push(locals.remove(name));
-    }
-    private void readEDIT_VAR(){
-        next();
-        String name = (String)retConstant(peek());
-        if(!scope) {
-            Object test = globals.get(name);
-            if(test != null) {
-                globals.put((String)name, stack.peek());
-            }
-            else {
-                //ERROR
-            }
-        }
-        else {
-            Object test = locals.get(name);
-            if(test != null) {
-                locals.put((String)name, stack.peek());
-            }
-            else {
-                //ERROR
-            }
-        }
-        stack.pop();
-    }
-    private void readGET_VAR(){
-        next();
-        String name = (String)retConstant(peek());
-        if(!scope)
-            stack.push(globals.get(name));
-        else stack.push(locals.get(name));
-    }
-    private void readCREATE_VAR(){
-        next();
-        String name = (String)retConstant(peek());
-        if(!scope) {
-            Object test = globals.get(name);
-            if(test == null) {
-                globals.put((String)name, stack.peek());
-            }
-            else {
-                //ERROR
-            }
-        }
-        else {
-            Object test = locals.get(name);
-            if(test == null) {
-                locals.put((String)name, stack.peek());
-            }
-            else {
-                //ERROR
-            }
-        }
-        stack.pop();
-    }
-    private void readCALLNATIVE(){
-        next();
-        String name = (String)retConstant(peek());
-        Natives.Run(name);
-    }
-    private void readJIT(){
-        // JIT [addr]
-        next();
-        if((boolean) stack.peek()){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-    }
-    private void readJIF(){
-        // JIF [addr]
-        next();
-        if(!((boolean) stack.peek())){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-    }
-    private void readCALL(){
-        next();
-        callsStack.push(pos);
-        pos = peekIntOf4bites();
-    }
-    private void readRET(){
-        pos = callsStack.pop();
-    }
-    private void readLOOP(){
-        // LOOP [constant]
-        next();
-
-        if(loopingCount == 0 && loopCounter == 0){
-            if(stack.peek() instanceof Boolean && (boolean) stack.peek()){
-                loopingCount = -1;
-            }
-            else{
-                loopingCount = ((Number)stack.peek()).intValue();
-                stack.pop();
-            }
-        }
-        if(loopingCount != -1){
-            loopCounter++;
-            if(loopingCount > loopCounter){
-                pos = peekIntOf4bites();
-            }
-            else if(loopingCount-1 == loopCounter){
-                loopingCount = 0;
-                loopCounter = 0;
-            }
-        }
-        else{
-            pos = peekIntOf4bites();
-        }
-    }
-    private void readJump(){
-        // JMP [addr]
-        next();
-        pos = peekIntOf4bites();
-        //System.out.println(pos);
-    }
-    private void readJE(){
-        // JE [addr]
-        next();
-        if(stack.peek().equals(stack.get(stack.size()-2))){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJNE(){
-        // JNE [addr]
-        next();
-        if(!stack.peek().equals(stack.get(stack.size()-2))){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJL(){
-        // JL [addr]
-        next();
-        if((float)stack.peek() < (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJG(){
-        // JG [addr]
-        next();
-        if((float)stack.peek() > (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJLE(){
-        // JLE [addr]
-        next();
-        if((float)stack.peek() < (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJGE(){
-        // JGE [addr]
-        next();
-        if((float)stack.peek() > (float)stack.get(stack.size()-2) || ((float)stack.peek()) == (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJLN(){
-        // JLN [addr]
-        next();
-        if((float)stack.peek() < (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJGN(){
-        // JLN [addr]
-        next();
-        if((float)stack.peek() > (float)stack.get(stack.size()-2) && ((float)stack.peek()) != (float)stack.get(stack.size()-2)){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJEV(){
-        // JEV [addr]
-        next();
-        if((float)stack.peek()%2 == 0){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readJUE(){
-        // JUE [addr]
-        next();
-        if((float)stack.peek()%2 != 0){
-            pos = peekIntOf4bites();
-        }
-        stack.pop();
-        stack.pop();
-    }
-    private void readCurch(){
-        // CURCH [constant]
-        next();
-        if(chunks != null){
-            stack = chunks.get((int)retConstant(peek()));
-        }
-        else{
-            throw new SPKException("NoChunks", "there are no chunks", line);
-        }
-    }
-    private void readChunks() {
-        // CHUNKS
-        next();
-        chunks = new ArrayList<>();
-        // Convert std stack to chunkising stack
-        Stack<Object> st = new Stack<>();
-        chunkSize = double2int(stack.peek());
-        for(int i = 0; i < stack.size()-1; i++){
-            if(i > chunkSize){
-                st.push(stack.get(i));
-            }
-            else if(i == chunkSize){
-                st.push(stack.get(i));
-                chunks.add(st);
-            }
-            else{
-                st = new Stack<>();
-            }
-        }
-    }
-    private void readBinary() {
-        // BINARY [char]
-        next();
-        if(stack.peek() instanceof Boolean){
-            if(stack.get(stack.size()-2) instanceof Boolean){
-                if((char)peek() == '*'){
-                    // BOOLEAN AND
-                    boolean r = (boolean)stack.peek() && (boolean)stack.get(stack.size()-2);
-                    stack.pop();
-                    stack.pop();
-                    if(checkChunk(stack.size()+1))
-                        stack.push(r);
-                    else{
-                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-                    }
-                }
-                else if((char)peek() == '+'){
-                    // BOOLEAN OR
-                    boolean r = (boolean)stack.peek() || (boolean)stack.get(stack.size()-2);
-                    stack.pop();
-                    stack.pop();
-                    if(checkChunk(stack.size()+1))
-                        stack.push(r);
-                    else{
-                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-                    }
-                }
-                else if((char)peek() == '^'){
-                    // BOOLEAN XOR
-                    boolean r = (boolean)stack.peek() ^ (boolean)stack.get(stack.size()-2);
-                    stack.pop();
-                    stack.pop();
-                    if(checkChunk(stack.size()+1))
-                        stack.push(r);
-                    else{
-                        throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-                    }
-                }
-            }
-            else{
-                //ERROR
-            }
-        }
-        else if((char)peek() == POW){
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = Math.pow(o1, o2);
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        else if((char)peek() == ADD){
-            // SUM
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = o2+o1;
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        else if((char)peek() == SUB){
-            // SUB
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = o2-o1;
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        else if((char)peek() == MUL){
-            // MUL
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = o2*o1;
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        else if((char)peek() == DIV){
-            // DIVIDE
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = o2 / o1;
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        else if((char)peek() == REM){
-            // MOD
-            double o1 = (double)stack.peek();
-            double o2 = (double)stack.get(stack.size()-2);
-            double r = o2 % o1;
-            stack.pop();
-            stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(r);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == LOWER) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a < b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == GREATER) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a > b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == EQUAL_GREATER) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a >= b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == EQUAL_LOWER) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a <= b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == EQUAL) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a == b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        } else if ((char) peek() == NOT_EQUAL) {
-            double b = (double) stack.pop();
-            double a = (double) stack.pop();
-            if(checkChunk(stack.size()+1))
-                stack.push(a != b);
-            else{
-                throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
-            }
-        }
-        next();
+        this.globals = new HashMap<>();
+        this.locals = new HashMap<>();
+        this.stack = new Stack<>();
+        this.callStack = new Stack<>();
     }
 
-    private void readSign() {
-        // POSITIVE
-        // change the sign of the last value of stack
-        next();
-        if(stack.peek() instanceof Boolean){
-            boolean r = !(boolean)stack.peek();
-            stack.pop();
-            stack.push(r);
-        }
-        else{
-            int num = double2int(stack.peek());
-            stack.pop();
-            stack.push(-num);
+    public void run() {
+        execution_loop:
+        while (true) {
+            if (ip >= bytecode.getBytecode().size())
+                break execution_loop;
+            byte instruction = next();
+            switch (instruction) {
+                case OP_HALT -> {
+                    break execution_loop;
+                }
+                case OP_PUSH -> push(readConstant());
+                case OP_DUP -> push(peek());
+                case OP_POP -> pop();
+                case OP_FRAME -> readFrame();
+                case OP_FLIP -> Collections.reverse(stack);
+                case OP_SWAP -> readSwap();
+                case OP_OUT -> readOut();
+                case OP_INP -> readInput();
+                case OP_SIGN -> readSign();
+                case OP_BINARY -> readBinary();
+                case OP_CHUNKS -> readChunks();
+                case OP_CURCH -> readCurch();
+                case OP_JMP -> readJmp();
+                case OP_PUSH_SCOPE -> scope = true;
+                case OP_POP_SCOPE -> scope = false;
+                case OP_JE,
+                        OP_JGN, OP_JLN, OP_JGE,
+                        OP_JLE, OP_JG, OP_JNE,
+                        OP_JEV, OP_JUE, OP_JL -> readUnifiedJump(instruction);
+                case OP_JIT, OP_JIF -> readBooleanJump(instruction);
+                case OP_CLR -> stack.clear();
+                case OP_CALL -> readCall();
+                case OP_RET -> readRet();
+                case OP_FRGET -> readFrGet();
+                case OP_LOOP -> readLoop();
+                case OP_CALL_NATIVE -> readCallNative();
+                case OP_CREATE_VAR -> readCreateVar();
+                case OP_GET_VAR -> readGetVar();
+                case OP_EDIT_VAR -> readEditVar();
+                case OP_DEL_VAR -> readDelVar();
+                default -> {
+                    throw new SPKException("FailureInstructionSet", "unimplemented/undefined instruction " + instruction, line());
+                }
+            }
         }
     }
 
-    private void readPush(){
-        // PUSH [constant]
-        next();
-        if(checkChunk(stack.size()+1))
-            stack.push(retConstant(peek()));
-        else{
-            throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+    public void readDelVar() {
+        String name = (String) readConstant();
+        stack.push((scope ? locals : globals).remove(name));
+    }
+
+    public void readGetVar() {
+        String name = (String) readConstant();
+        push((scope ? locals : globals).get(name));
+    }
+
+    public void readEditVar() {
+        readCreateVar(false);
+    }
+
+    public void readCreateVar() {
+        readCreateVar(true);
+    }
+
+    public void readCreateVar(boolean flipCondition) {
+        String name = (String) readConstant();
+        if (!scope) {
+            if (flipCondition != globals.containsKey(name)) {
+                globals.put(name, pop());
+            } else throw new SPKException("VariableRedefinition", "trying to redefine global variable " + name, line());
+        } else {
+            if (flipCondition != locals.containsKey(name)) {
+                locals.put(name, pop());
+            } else throw new SPKException("VariableRedefinition", "trying to redefine local variable " + name, line());
         }
     }
-    private void readDup(){
-        // DUP
-        next();
-        if(checkChunk(stack.size()+1))
-            stack.push(stack.peek());
-        else{
-            throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+
+    public void readCallNative() {
+        Natives.Run((String) readConstant());
+    }
+
+    public void readLoop() {
+        throw new SPKException("UnimplementedOpcode", "OP_LOOP has no implementation!", line());
+    }
+
+    public void readFrGet() {
+        Object get = ((Object[]) stack.pop())[object2number(readConstant()).intValue()];
+        push(get);
+    }
+
+    public void readCall() {
+        callStack.push(ip);
+        ip = readIndex();
+    }
+
+    public void readRet() {
+        ip = callStack.pop();
+    }
+
+    public void readBooleanJump(byte instruction) {
+        Object predicate = pop();
+        int index = readIndex();
+        switch (instruction) {
+            case OP_JIT -> {
+                if ((boolean) predicate)
+                    ip = index;
+            }
+            case OP_JIF -> {
+                if (!(boolean) predicate)
+                    ip = index;
+            }
         }
     }
-    private void readPop(){
-        // POP
-        next();
-        if(peek() == 0)
-            stack.pop();
-        else{
-            // POP [constant]
-            bytecode.getConstants().set(peek(), stack.pop());
+
+    public void readUnifiedJump(byte instruction) {
+        Object b = pop();
+        Object a = instruction != OP_JEV && instruction != OP_JUE ? pop() : null;
+        Object result = null;
+        double aNumber = 0.0;
+        double bNumber = 0.0;
+        int index = readIndex();
+        if (a instanceof Number || b instanceof Number) {
+            aNumber = object2number(a).doubleValue();
+            bNumber = object2number(b).doubleValue();
+        }
+        switch ((char) next()) {
+            case OP_JE -> result = a.equals(b);
+            case OP_JNE -> result = !a.equals(b);
+            case OP_JL -> result = aNumber < bNumber;
+            case OP_JG -> result = aNumber > bNumber;
+            case OP_JLE -> result = aNumber <= bNumber;
+            case OP_JGE -> result = aNumber >= bNumber;
+            case OP_JLN -> result = (aNumber < bNumber) || (aNumber != bNumber);
+            case OP_JGN -> result = (aNumber > bNumber) || (aNumber != bNumber);
+            case OP_JEV -> result = aNumber % 2.0 == 0.0;
+            case OP_JUE -> result = aNumber % 2.0 != 0.0;
+        }
+        if ((boolean) result) {
+            ip = index;
         }
     }
-    private void readFrame(){
-        // FRAME [constant]
-        next();
-        int size = double2int(retConstant(peek()));
-        Stack<Object> nst = new Stack<>();
-        for(int i = 0; i < size; i++){
-            nst.push(stack.get(stack.size()-1-i));
-        }
-        stack.push(nst);
-        for(int i = 0; i < size; i++) {
-            stack.pop();
-        }
+
+    public void readJmp() {
+        ip = readIndex();
     }
-    private void readFRGET(){
-        // FRGET [constant]
-        Object get = ((Object[])stack.peek())[(int)retConstant(peek())];
-        stack.push(get);
-        stack.pop();
+
+    public void readCurch() {
+        if (chunks != null) {
+            stack = chunks.get(object2number(readConstant()).intValue());
+        } else
+            throw new SPKException("NoChunks", "there are no chunks left", line());
     }
-    private void readCLR(){
-        // CLR
-        stack.clear();
-    }
-    private void readFlip(){
-        // FLIP
-        next();
-        Stack<Object> nst = new Stack<>();
-        for(int j = 0; j < stack.size(); j++){
-            nst.push(stack.get(stack.size()-1-j));
-        }
-        stack = nst;
-    }
-    private void readSwap(){
-        // SWAP
-        next();
-        Object obj1 = stack.get(stack.size()-1);
-        Object obj2 = stack.get(stack.size()-2);
-        stack.set(stack.size()-1, obj2);
-        stack.set(stack.size()-2, obj1);
-    }
-    private void readOut(){
-        // OUT
-        next();
-        // IO operation
-        if(stack.get(stack.size()-1) == "\0"){
-            System.out.println("Null");
-        }
-        else System.out.println(stack.get(stack.size()-1));
-        stack.pop();
-    }
-    private void readInp(){
-        // INP
-        next();
-        // IO operation
-        Scanner in = new Scanner(System.in);
-        System.out.print(stack.get(stack.size()-1));
-        String text = in.nextLine();
-        stack.pop();
-        if(checkChunk(stack.size()+1))
-            stack.push(text);
-        else{
-            throw new SPKException("ChunkOverflow", "max size of chunk is '"+chunkSize+"'", line);
+
+    public void readChunks() {
+        this.chunks = new ArrayList<>();
+        Stack<Object> tempStack = new Stack<>();
+        int chunkSize = object2number(pop()).intValue();
+        for (int i = 0; i < stack.size(); i++) {
+            if (i > chunkSize) {
+                tempStack.push(stack.get(i));
+            } else if (i == chunkSize) {
+                tempStack.push(stack.get(i));
+                chunks.add(tempStack);
+            } else {
+                tempStack.clear();
+            }
         }
     }
-    private int double2int(Object o){
-        if(o instanceof Integer){
-            return (int)o;
+
+    public void readBinary() {
+        Object b = pop();
+        Object a = pop();
+        char operation = (char) next();
+        if (a instanceof Boolean) {
+            boolean aBoolean = (boolean) a;
+            boolean bBoolean = (boolean) b;
+            boolean result = false;
+            switch (operation) {
+                case '=' -> {
+                    result = aBoolean == bBoolean;
+                }
+                case BinaryOperators.NOT_EQUAL -> {
+                    result = aBoolean != bBoolean;
+                }
+                case '*' -> {
+                    result = aBoolean && bBoolean;
+                }
+                case '+' -> {
+                    result = aBoolean || bBoolean;
+                }
+                case '^' -> {
+                    result = aBoolean ^ bBoolean;
+                }
+                default -> {
+                    throw new SPKException("UnsupportedOperation", "unsupported operation '" + operation + "' for booleans!", line());
+                }
+            }
+            push(result);
+            return;
         }
-        Double dd = (Double)o;
-        return dd.intValue();
+        if (a instanceof String || b instanceof String) {
+            String aString = (String) a;
+            String bString = (String) b;
+            String result = null;
+            switch (operation) {
+                case BinaryOperators.ADD -> {
+                    result = aString + bString;
+                }
+                default -> {
+                    throw new SPKException("UnsupportedOperation", "unsupported operation '" + operation + "' for strings!", line());
+                }
+            }
+            push(result);
+            return;
+        }
+        double aOperand = object2number(a).doubleValue();
+        double bOperand = object2number(b).doubleValue();
+        double result = 0;
+        boolean asLogical = false;
+        boolean logicalResult = false;
+        switch (operation) {
+            case BinaryOperators.ADD -> result = aOperand + bOperand;
+            case BinaryOperators.SUB -> result = aOperand - bOperand;
+            case BinaryOperators.MUL -> result = aOperand * bOperand;
+            case BinaryOperators.DIV -> result = aOperand / bOperand;
+            case BinaryOperators.POW -> result = Math.pow(aOperand, bOperand);
+            case BinaryOperators.REM -> result = aOperand % bOperand;
+            case BinaryOperators.LOWER -> {
+                logicalResult = aOperand < bOperand;
+                asLogical = true;
+            }
+            case BinaryOperators.GREATER -> {
+                logicalResult = aOperand > bOperand;
+                asLogical = true;
+            }
+            case BinaryOperators.EQUAL_LOWER -> {
+                logicalResult = aOperand <= bOperand;
+                asLogical = true;
+            }
+            case BinaryOperators.EQUAL_GREATER -> {
+                logicalResult = aOperand >= bOperand;
+                asLogical = true;
+            }
+            case BinaryOperators.NOT_EQUAL -> {
+                logicalResult = aOperand != bOperand;
+                asLogical = true;
+            }
+            case BinaryOperators.EQUAL -> {
+                logicalResult = aOperand == bOperand;
+                asLogical = true;
+            }
+        }
+        push(asLogical ? logicalResult : result);
     }
-    private byte peek(){
-        return bytes.get(pos);
+
+    public void readSign() {
+        Object operand = pop();
+        if (operand instanceof Boolean) {
+            stack.push(!((boolean) operand));
+        } else {
+            push(-(object2number(operand).doubleValue()));
+        }
     }
-    private byte peek(int relative){
-        return bytes.get(pos+relative);
+
+    public void readInput() {
+        System.out.println(pop());
+        push(SPKVM_INPUT.nextLine());
     }
-    private Object retConstant(byte i){
+
+    public void readOut() {
+        Object constant = pop();
+        System.out.println(constant.equals("\0") ? "Null" : constant.toString());
+    }
+
+    public void readSwap() {
+        Object b = pop();
+        Object a = pop();
+        push(a);
+        push(b);
+    }
+
+    public void readFrame() {
+        int size = object2number(readConstant()).intValue();
+        Stack<Object> frame = new Stack<>();
+        for (int i = 0; i < size; i++) {
+            frame.push(pop());
+        }
+        push(frame);
+    }
+
+    public void push(Object obj) {
+        stack.push(obj);
+    }
+
+    public Object pop() {
+        return stack.pop();
+    }
+
+    public Object peek() {
+        return stack.peek();
+    }
+
+    public Object readConstant() {
+        return bytecode.getConstants().get(readIndex());
+    }
+
+    public int readIndex() {
         byte[] indexBytes = new byte[] {
-                i,
-                peek(1),
-                peek(2),
-                peek(3)
+                next(), next(), next(), next()
         };
-        int _int = IntegerBytesConvert.byteArr2Int(indexBytes);
-        next();
-        next();
-        next();
-        next();
-        return bytecode.getConstants().get(_int);
+        return IntegerBytesConvert.byteArr2Int(indexBytes);
     }
-    private int peekIntOf4bites(){
-        byte[] indexBytes = new byte[] {
-                peek(),
-                peek(1),
-                peek(2),
-                peek(3)
-        };
-        int _int = IntegerBytesConvert.byteArr2Int(indexBytes);
-        next();
-        next();
-        next();
-        next();
-        return _int;
+
+    public byte next() {
+        return bytecode.getBytecode().get(ip++);
     }
-    private void next(){
-        pos++;
-    }
-    private boolean checkChunk(int i){
-        if(chunkSize != 0){
-            return i <= chunkSize;
+
+    private Number object2number(Object expr) {
+        if (!(expr instanceof Number)) {
+            throw new SPKException("CastError", "cannot cast " + expr.getClass().getSimpleName() + " to a number", line());
         }
-        else return true;
+        return (Number) expr;
     }
+
+    private int line() {
+        return bytecode.getLines().get(ip);
+    }
+
+    private String instructionToString(byte instruction) {
+        try {
+            for (Field opcodeField : getStatics(Instructions.class)) {
+                if ((byte) opcodeField.get(null) == instruction) {
+                    return opcodeField.getName();
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        return "null";
+    }
+
+    public static List<Field> getStatics(Class<?> clazz) {
+        List<Field> result;
+
+        result = Arrays.stream(clazz.getDeclaredFields())
+                .filter(f -> Modifier.isStatic(f.getModifiers()))
+                .collect(toList());
+
+        return result;
+    }
+
 }

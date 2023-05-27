@@ -12,6 +12,7 @@ import com.timsystem.spk.compiler.Parser;
 import com.timsystem.spk.compiler.ast.AST;
 import com.timsystem.spk.vm.Bytecode;
 import com.timsystem.spk.vm.Disassemble;
+import com.timsystem.spk.vm.RefactoredRun;
 import com.timsystem.spk.vm.Run;
 import org.fusesource.jansi.AnsiConsole;
 import java.util.Objects;
@@ -97,10 +98,11 @@ public class Main {
                         Parser parser = new Parser(new Lexer(Files.readString(Paths.get(arg))));
                         AST ast = parser.parse();
                         String str = ast.compile();
-                        //System.out.println(str);
+                        System.out.println("\n" + str + "\n");
                         Bytecode bytecode = AssemblerCompiler.compile(str);
+                        Disassemble.disassemble(arg, bytecode);
                         RawBytecode.saveToFile(bytecode, SPKfile2SPKVM(arg));
-                        Run run = new Run(bytecode);
+                        RefactoredRun run = new RefactoredRun(bytecode);
                         run.run();
                     } catch (IOException ex) {
                         //ERROR

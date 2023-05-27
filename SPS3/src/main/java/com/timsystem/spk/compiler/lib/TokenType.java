@@ -44,6 +44,7 @@ public enum TokenType {
     CC,
     SEMICOLON,
     BAR,
+    EXCL,
 
     STRUCT,
     EXTENDS,
