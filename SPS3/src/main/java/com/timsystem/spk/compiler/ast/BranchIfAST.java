@@ -17,16 +17,17 @@ public class BranchIfAST implements AST {
     @Override
     public String compile() {
         StringBuilder builder = new StringBuilder();
+        BRANCH_IF_COUNTER++;
+        int index = BRANCH_IF_COUNTER;
         builder.append(expr.compile()).append("\n");
-        builder.append("jit branch_if_true_body").append(BRANCH_IF_COUNTER).append("\n");
+        builder.append("jit branch_if_true_body").append(index).append("\n");
         if (elseBody != null) {
             builder.append(elseBody.compile()).append("\n\n");
-            builder.append("jmp after_branch_if").append(BRANCH_IF_COUNTER).append("\n");
         }
-        builder.append("branch_if_true_body").append(BRANCH_IF_COUNTER).append(":\n");
+        builder.append("jmp after_branch_if").append(index).append("\n");
+        builder.append("branch_if_true_body").append(index).append(":\n");
         builder.append(body.compile()).append("\n");
-        builder.append("after_branch_if").append(BRANCH_IF_COUNTER).append(":\n");
-        BRANCH_IF_COUNTER++;
+        builder.append("after_branch_if").append(index).append(":\n");
         return builder.toString();
     }
 }
