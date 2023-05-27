@@ -8,21 +8,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SPKVMCore {
-    public SPKVMCore(){
-        inject();
-    }
-    private void inject(){
-        Natives.Add("FileRead", stack -> {
+    public static void inject(){
+        Natives.Add("FileRead", run -> {
             try {
-                String text = Files.readString(Path.of((String)stack.peek()));
-                Run.stack.push(text);
+                String text = Files.readString(Path.of((String) run.pop()));
+                run.stack().push(text);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         });
-        Natives.Add("FileWrite", stack -> {
-            String text = (String)stack.peek();
-            try (FileWriter writer = new FileWriter((String)stack.get(stack.size()-2), false)) {
+        Natives.Add("FileWrite", run -> {
+            String text = (String) run.stack().pop();
+            try (FileWriter writer = new FileWriter((String)run.pop(), false)) {
                 writer.append(text);
             } catch (IOException e) {
                 throw new RuntimeException(e);
