@@ -1,30 +1,33 @@
 package com.timsystem.spk.compiler.ast;
 
-public class ForAST implements AST{
-    private AST variable;
+public class ForAST implements AST {
+
+    private AST initializer;
     private AST condition;
-    private AST counter;
-    private int num;
-    private int line;
-    public ForAST(AST variable, AST condition, AST counter, int num, int line){
-        this.variable = variable;
+    private AST termination;
+    private AST body;
+
+    public static int FOR_INDEX = 0;
+
+    public ForAST(AST initializer, AST condition, AST termination, AST body) {
+        this.initializer = initializer;
         this.condition = condition;
-        this.counter = counter;
-        this.num = num;
-        this.line = line;
+        this.termination = termination;
+        this.body = body;
     }
+
     @Override
     public String compile() {
-        String acc = "PUSH_SCOPE\n";
-        String label = "label_" + (num + 1);
-        String label2 = "label_" + (num + 2);
-        acc += variable.compile();
-        acc += label + ":\n";
-        acc += condition.compile();
-        acc += "JIF " + label2 + "\n";
-        acc += counter.compile();
-        acc += label2 + ":\n";
-        acc += "POP_SCOPE\n";
-        return acc;
+        int index = FOR_INDEX++;
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(initializer.compile()).append("\n\n");
+        buffer.append("for_condition_label_").append(index).append(":\n");
+        buffer.append(condition.compile()).append("\n");
+        buffer.append("JIF after_for_label_").append(index).append("\n");
+        buffer.append(body.compile()).append("\n\n");
+        buffer.append(termination.compile()).append("\n\n");
+        buffer.append("JMP for_condition_label_").append(index).append("\n");
+        buffer.append("after_for_label_").append(index).append(":\n\n");
+        return buffer.toString();
     }
 }

@@ -63,6 +63,22 @@ public class Parser {
             consume(TokenType.COLON);
             return new StdOutAST(root(), line());
         }
+        if (match(TokenType.WHILE)) {
+            AST expr = root();
+            return new WhileAST(blockOrStatement(), expr, line());
+        }
+        if (match(TokenType.FOR)) {
+            consume(TokenType.LPAREN);
+            AST initializer = statement();
+            consume(TokenType.COMMA);
+            AST condition = root();
+            consume(TokenType.COMMA);
+            AST termination = statement();
+            consume(TokenType.RPAREN);
+            AST body = blockOrStatement();
+            return new ForAST(initializer, condition, termination, body);
+        }
+
 
         return new PopAST(root());
     }

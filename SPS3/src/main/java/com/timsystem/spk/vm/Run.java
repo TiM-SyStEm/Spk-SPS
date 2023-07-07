@@ -403,7 +403,7 @@ public class Run {
         return result;
     }
     public void scoping(){
-        
+
     }
     public Stack<Object> stack() {
         return stack;

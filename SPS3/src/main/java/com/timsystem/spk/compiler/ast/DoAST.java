@@ -14,8 +14,7 @@ public class DoAST implements AST{
         String label = "label_" + (num + 1);
         String acc = label + ":\n";
         acc += block.compile();
-        acc += "PUSH inline true\n";
-        acc += "LOOP " + label + "\n";
+        acc += "JMP label_" + (num + 1) + "\n";
         return acc;
     }
 }
