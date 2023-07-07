@@ -10,9 +10,11 @@ public class BlockAST implements AST{
     @Override
     public String compile() {
         StringBuilder block_comp = new StringBuilder();
+        block_comp.append("\nPUSH_SCOPE\n");
         for(AST ast : block){
             block_comp.append(ast.compile());
         }
+        block_comp.append("\nPOP_SCOPE\n");
         return block_comp.toString();
     }
 }
