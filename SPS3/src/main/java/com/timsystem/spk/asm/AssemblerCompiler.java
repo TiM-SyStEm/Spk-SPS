@@ -169,7 +169,7 @@ public class AssemblerCompiler {
                     }
                 }
             }
-            case "call_native" -> {
+            /*case "call_native" -> {
                 String inlineIndicator = parts[1].toLowerCase();
                 if (inlineIndicator.equals("inline")) {
                     Object expression = compileImmediateExpression(parts, 2, lineNumber); // to skip 'PUSH inline' parts
@@ -187,7 +187,7 @@ public class AssemblerCompiler {
                         bytecode.writeInstruction(b, lineNumber);
                     }
                 }
-            }
+            }*/
             case "dup" -> {
                 bytecode.writeInstruction(Instructions.OP_DUP, lineNumber);
             }

@@ -42,5 +42,5 @@ public class Instructions {
                         OP_JIF = 37,
                         OP_FRGET = 38,
                         OP_CLR = 39,
-                        OP_CALL_NATIVE = 40;
+                        CREATE_CLASS_CONTAINER = 40;
 }

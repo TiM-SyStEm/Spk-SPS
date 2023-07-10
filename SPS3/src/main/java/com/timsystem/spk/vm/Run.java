@@ -2,8 +2,9 @@ package com.timsystem.spk.vm;
 
 import com.timsystem.spk.compiler.lib.IntegerBytesConvert;
 import com.timsystem.spk.vm.lib.Loop;
-import com.timsystem.spk.vm.runtime.Natives;
-import com.timsystem.spk.vm.runtime.SPKVMCore;
+import com.timsystem.spk.vm.runtime.Container;
+import com.timsystem.spk.vm.runtime.Function;
+import com.timsystem.spk.vm.runtime.Klass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,9 +23,9 @@ public class Run {
     private Stack<Integer> callStack;
     private Stack<Loop> loopStack;
     private Stack<Loop> localsStack;
+    private Stack<String> contStack;
     private ArrayList<Stack<Object>> chunks;
-
-
+    private Klass runtime;
     private boolean scope;
     public static Scanner SPKVM_INPUT = new Scanner(System.in);
 
@@ -38,7 +39,7 @@ public class Run {
         this.callStack = new Stack<>();
         this.loopStack = new Stack<>();
         this.localsStack = new Stack<>();
-        SPKVMCore.inject();
+        this.runtime = new Klass("__runtime__", new HashMap<>());
     }
 
     public void run() {
@@ -77,18 +78,20 @@ public class Run {
                 case OP_RET -> readRet();
                 case OP_FRGET -> readFrGet();
                 case OP_LOOP -> readLoop();
-                case OP_CALL_NATIVE -> readCallNative();
                 case OP_CREATE_VAR -> readCreateVar();
                 case OP_GET_VAR -> readGetVar();
                 case OP_EDIT_VAR -> readEditVar();
                 case OP_DEL_VAR -> readDelVar();
+                case CREATE_CLASS_CONTAINER -> readClassCont();
                 default -> {
                     throw new SPKException("FailureInstructionSet", "unimplemented/undefined instruction " + instruction, line());
                 }
             }
         }
     }
-
+    public void readClassCont(){
+        
+    }
     public void readDelVar() {
         String name = (String) readConstant();
         stack.push((scope ? locals : globals).remove(name));
@@ -118,10 +121,6 @@ public class Run {
                 locals.put(name, pop());
             } else throw new SPKException("VariableRedefinition", "trying to redefine local variable " + name, line());
         }
-    }
-
-    public void readCallNative() {
-        Natives.Run((String) readConstant(), this);
     }
 
     public void readLoop() {

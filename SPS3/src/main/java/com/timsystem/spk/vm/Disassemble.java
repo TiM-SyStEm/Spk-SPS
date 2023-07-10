@@ -148,7 +148,7 @@ public class Disassemble {
                 case Instructions.OP_CLR -> {
                     immediateInstruction("OP_CLR");
                 }
-                case Instructions.OP_CALL_NATIVE -> {
+                /*case Instructions.OP_CALL_NATIVE -> {
                     byte[] indexBytes = new byte[]{
                             bytes.get(i + 1),
                             bytes.get(i + 2),
@@ -157,7 +157,7 @@ public class Disassemble {
                     };
                     i += 4;
                     constantInstruction("OP_CALL_NATIVE", bytecode, IntegerBytesConvert.byteArr2Int(indexBytes));
-                }
+                }*/
                 case Instructions.OP_EDIT_VAR -> {
                     byte[] indexBytes = new byte[]{
                             bytes.get(i + 1),
